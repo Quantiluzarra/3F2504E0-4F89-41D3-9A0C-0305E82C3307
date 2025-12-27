@@ -4,995 +4,716 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="dark" />
-  <title>ШИФРОТЕКС — защищённое шифрование</title>
+  <title>ШИФРОТЕКС</title>
   <style>
     :root{
-      /* Fallback (если не Telegram) */
-      --tg-bg: #0b0f14;
-      --tg-secondary-bg: #101823;
-      --tg-card: rgba(255,255,255,.06);
-      --tg-card-2: rgba(255,255,255,.08);
-      --tg-text: #e8eef7;
-      --tg-hint: rgba(232,238,247,.62);
-      --tg-border: rgba(120, 230, 200, .18);
-      --tg-accent: #22d3a6;
-      --tg-accent-2: #00a884;
-      --tg-danger: #ff6b6b;
+      --tg-bg:#05070b;
+      --tg-card:rgba(255,255,255,.06);
+      --tg-text:#eef2ff;
+      --tg-hint:rgba(226,232,255,.6);
+      --tg-accent:#22d3a6;
+      --tg-border:rgba(148, 163, 184,.3);
 
-      --radius: 18px;
-      --radius-sm: 12px;
+      --radius:16px;
+      --radius-sm:12px;
 
-      --shadow: 0 14px 45px rgba(0,0,0,.45);
-      --shadow-soft: 0 8px 28px rgba(0,0,0,.35);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+      --ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-      --pad: 16px;
-      --pad-lg: 22px;
+      --safe-top:env(safe-area-inset-top,0px);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+      --safe-left:env(safe-area-inset-left,0px);
+      --safe-right:env(safe-area-inset-right,0px);
 
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --ui: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
-
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
-      --safe-left: env(safe-area-inset-left, 0px);
-      --safe-right: env(safe-area-inset-right, 0px);
-
-      --anim: 220ms;
-      --anim-slow: 420ms;
-      --ease: cubic-bezier(.2,.8,.2,1);
+      --anim:200ms;
+      --anim-slow:420ms;
+      --ease:cubic-bezier(.2,.8,.2,1);
     }
 
-    @media (prefers-reduced-motion: reduce){
-      :root{ --anim: 1ms; --anim-slow: 1ms; }
-      *{ animation-duration: 1ms !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }
+    @media (prefers-reduced-motion:reduce){
+      :root{--anim:1ms;--anim-slow:1ms;}
+      *{animation-duration:1ms!important;transition-duration:1ms!important;}
     }
 
-    *{ box-sizing: border-box; }
-    html, body{ height: 100%; }
+    *{box-sizing:border-box;}
+    html,body{height:100%;}
     body{
-      margin: 0;
-      font-family: var(--ui);
-      color: var(--tg-text);
-      background:
-        radial-gradient(1200px 600px at 15% 10%, rgba(34, 211, 166, .18), transparent 55%),
-        radial-gradient(900px 500px at 85% 25%, rgba(0, 168, 132, .14), transparent 60%),
-        linear-gradient(180deg, #06080c 0%, var(--tg-bg) 45%, #06080c 100%);
-      min-height: 100%;
+      margin:0;
+      font-family:var(--ui);
+      color:var(--tg-text);
+      background:#020617 radial-gradient(circle at 0 0,rgba(34,211,166,.16),transparent 55%);
       padding:
-        calc(var(--safe-top) + 14px)
-        calc(var(--safe-right) + 14px)
-        calc(var(--safe-bottom) + 16px)
-        calc(var(--safe-left) + 14px);
-      overflow-x: hidden;
+        calc(var(--safe-top)+10px)
+        calc(var(--safe-right)+12px)
+        calc(var(--safe-bottom)+12px)
+        calc(var(--safe-left)+12px);
     }
-
     .wrap{
-      max-width: 1100px;
-      margin: 0 auto;
-      display: grid;
-      gap: 14px;
+      max-width:980px;
+      margin:0 auto;
+      display:grid;
+      gap:10px;
     }
 
-    /* Header */
     .topbar{
-      position: sticky;
-      top: calc(var(--safe-top) + 10px);
-      z-index: 20;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      background: linear-gradient(180deg, rgba(8,12,18,.78), rgba(8,12,18,.55));
-      border: 1px solid var(--tg-border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-soft);
-      padding: 14px 14px;
       display:flex;
-      align-items:center;
       justify-content:space-between;
-      gap: 12px;
-      animation: pop var(--anim-slow) var(--ease);
-    }
-
-    .brand{
-      display:flex;
-      flex-direction:column;
-      gap: 2px;
-      min-width: 0;
-    }
-    .brand h1{
-      margin: 0;
-      font-size: 15px;
-      letter-spacing: 1.8px;
-      text-transform: uppercase;
-      display:flex;
       align-items:center;
-      gap: 10px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--tg-border);
+      background:rgba(15,23,42,.9);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      font-size:12px;
+      animation:fadeUp var(--anim-slow) var(--ease);
     }
-    .chip{
-      display:inline-flex;
-      align-items:center;
-      gap: 8px;
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--tg-hint);
-      white-space: nowrap;
-      overflow:hidden;
-      text-overflow: ellipsis;
+    .topbar span:first-child{
+      font-weight:600;
+      letter-spacing:1px;
+      text-transform:uppercase;
+      font-size:11px;
     }
     .dot{
-      width: 9px; height: 9px; border-radius: 999px;
-      background: var(--tg-accent);
-      box-shadow: 0 0 0 6px rgba(34,211,166,.12), 0 0 18px rgba(34,211,166,.35);
-      animation: pulse 1.9s var(--ease) infinite;
+      width:8px;height:8px;border-radius:999px;margin-right:6px;
+      background:var(--tg-accent);
+      box-shadow:0 0 0 4px rgba(34,211,166,.18);
+      animation:pulse 1.9s var(--ease) infinite;
+      display:inline-block;
     }
 
-    /* Tabs */
     .tabs{
-      position: relative;
       display:flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      padding: 10px;
-      border-radius: var(--radius);
-      background: rgba(255,255,255,.03);
-      border: 1px solid var(--tg-border);
-      box-shadow: var(--shadow-soft);
-      overflow: hidden;
-      animation: pop var(--anim-slow) var(--ease);
+      gap:6px;
+      padding:4px;
+      border-radius:999px;
+      border:1px solid var(--tg-border);
+      background:rgba(15,23,42,.9);
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
+      font-size:11px;
+      animation:fadeUp var(--anim-slow) var(--ease);
     }
     .tab{
-      position: relative;
-      border: 0;
-      cursor: pointer;
-      user-select:none;
-      padding: 10px 12px;
-      border-radius: 999px;
-      background: transparent;
-      color: var(--tg-hint);
-      font-weight: 700;
-      font-size: 12px;
-      letter-spacing: .8px;
-      text-transform: uppercase;
-      transition: transform var(--anim) var(--ease), color var(--anim) var(--ease), background var(--anim) var(--ease);
+      flex:1;
+      border:0;
+      border-radius:999px;
+      padding:8px 10px;
+      background:transparent;
+      color:var(--tg-hint);
+      text-transform:uppercase;
+      letter-spacing:.7px;
+      font-weight:600;
+      cursor:pointer;
+      transition:background var(--anim) var(--ease),color var(--anim) var(--ease),transform var(--anim) var(--ease);
     }
-    .tab:hover{ color: var(--tg-text); transform: translateY(-1px); }
     .tab.active{
-      color: #061013;
-      background: linear-gradient(135deg, var(--tg-accent) 0%, #2ee9bd 55%, var(--tg-accent-2) 100%);
-      box-shadow: 0 10px 26px rgba(34,211,166,.24);
+      background:var(--tg-accent);
+      color:#020617;
+      transform:translateY(-1px);
     }
-    .tab:focus{ outline: 2px solid rgba(34,211,166,.45); outline-offset: 2px; }
 
-    /* Cards */
+    .section{display:none;}
+    .section.active{display:block;animation:fadeUp var(--anim-slow) var(--ease);}
+
     .grid{
       display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
+      grid-template-columns:1.1fr 1fr;
+      gap:10px;
     }
-    @media (max-width: 980px){
-      .grid{ grid-template-columns: 1fr; }
+    @media (max-width:900px){
+      .grid{grid-template-columns:1fr;}
     }
 
     .card{
-      border-radius: var(--radius);
-      border: 1px solid var(--tg-border);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      box-shadow: var(--shadow);
-      padding: var(--pad-lg);
-      overflow: hidden;
-      position: relative;
-      transform: translateZ(0);
-      animation: pop var(--anim-slow) var(--ease);
-    }
-    .card::before{
-      content:"";
-      position:absolute;
-      inset: -40% -20% auto -20%;
-      height: 240px;
-      background: radial-gradient(closest-side, rgba(34,211,166,.18), transparent 70%);
-      filter: blur(10px);
-      pointer-events:none;
+      border-radius:var(--radius);
+      border:1px solid var(--tg-border);
+      background:rgba(15,23,42,.92);
+      padding:12px;
+      box-shadow:0 10px 30px rgba(0,0,0,.45);
     }
     .title{
-      margin: 0 0 14px 0;
       display:flex;
-      align-items:center;
       justify-content:space-between;
-      gap: 10px;
-    }
-    .title .h{
-      font-family: var(--mono);
-      letter-spacing: 1.4px;
-      text-transform: uppercase;
-      font-size: 12px;
-      color: rgba(34,211,166,.95);
-      display:flex;
       align-items:center;
-      gap: 10px;
-    }
-    .badge{
-      font-family: var(--mono);
-      font-size: 10px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(34,211,166,.25);
-      background: rgba(34,211,166,.06);
-      color: rgba(232,238,247,.78);
-      white-space: nowrap;
+      margin-bottom:8px;
+      font-size:11px;
+      letter-spacing:.8px;
+      text-transform:uppercase;
+      color:var(--tg-hint);
     }
 
-    /* Inputs */
-    .group{ margin-bottom: 14px; }
     label{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-      font-size: 11px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--tg-hint);
-      margin: 0 0 8px 0;
+      display:block;
+      margin-bottom:4px;
+      font-size:11px;
+      color:var(--tg-hint);
+      text-transform:uppercase;
+      letter-spacing:.7px;
     }
-    .hint{
-      font-family: var(--mono);
-      font-size: 10px;
-      color: rgba(232,238,247,.55);
-      text-transform:none;
-      letter-spacing: 0;
+
+    textarea,input,select{
+      width:100%;
+      border-radius:var(--radius-sm);
+      border:1px solid rgba(148,163,184,.4);
+      background:#020617;
+      color:var(--tg-text);
+      padding:10px 10px;
+      font-size:13px;
+      font-family:var(--mono);
+      outline:none;
+      transition:border-color var(--anim) var(--ease),box-shadow var(--anim) var(--ease),transform var(--anim) var(--ease);
     }
-    textarea, input[type="password"], input[type="text"], select{
-      width: 100%;
-      border-radius: var(--radius-sm);
-      border: 1px solid rgba(34,211,166,.22);
-      background: rgba(5, 7, 10, .7);
-      color: var(--tg-text);
-      padding: 12px 12px;
-      font-size: 13px;
-      line-height: 1.45;
-      font-family: var(--mono);
-      transition: border-color var(--anim) var(--ease), box-shadow var(--anim) var(--ease), transform var(--anim) var(--ease);
-      outline: none;
-    }
-    textarea{ min-height: 132px; resize: vertical; word-break: break-word; }
-    textarea:focus, input:focus, select:focus{
-      border-color: rgba(34,211,166,.55);
-      box-shadow: 0 0 0 4px rgba(34,211,166,.12);
-      transform: translateY(-1px);
+    textarea{min-height:110px;resize:vertical;}
+    textarea:focus,input:focus,select:focus{
+      border-color:var(--tg-accent);
+      box-shadow:0 0 0 3px rgba(34,211,166,.18);
+      transform:translateY(-1px);
     }
 
     .row{
       display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
     }
-    @media (max-width: 520px){
-      .row{ grid-template-columns: 1fr; }
+    @media (max-width:520px){
+      .row{grid-template-columns:1fr;}
     }
 
-    /* Switch */
     .switch{
       display:flex;
       align-items:center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: var(--radius-sm);
-      border: 1px solid rgba(34,211,166,.18);
-      background: rgba(255,255,255,.03);
-      transition: transform var(--anim) var(--ease), border-color var(--anim) var(--ease);
-      user-select: none;
+      gap:6px;
+      font-size:11px;
+      color:var(--tg-hint);
+      margin-top:4px;
     }
-    .switch:hover{ transform: translateY(-1px); border-color: rgba(34,211,166,.35); }
-    .switch input{ width: 18px; height: 18px; accent-color: var(--tg-accent); }
-    .switch span{ font-size: 12px; color: rgba(232,238,247,.85); }
+    .switch input{width:16px;height:16px;accent-color:var(--tg-accent);}
 
-    /* Buttons + ripple */
-    .btns{ display:flex; gap: 10px; flex-wrap: wrap; }
+    .btns{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
     .btn{
-      position: relative;
-      overflow: hidden;
-      border: 0;
-      cursor: pointer;
-      border-radius: 14px;
-      padding: 12px 14px;
-      font-weight: 900;
-      letter-spacing: .9px;
-      text-transform: uppercase;
-      font-size: 12px;
-      color: #071114;
-      background: linear-gradient(135deg, var(--tg-accent) 0%, #2ee9bd 55%, var(--tg-accent-2) 100%);
-      box-shadow: 0 12px 30px rgba(34,211,166,.22);
-      transition: transform var(--anim) var(--ease), filter var(--anim) var(--ease);
-      flex: 1;
-      min-width: 140px;
+      flex:1;
+      border:0;
+      border-radius:999px;
+      padding:9px 10px;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.7px;
+      font-weight:700;
+      cursor:pointer;
+      background:var(--tg-accent);
+      color:#020617;
+      box-shadow:0 8px 22px rgba(34,211,166,.25);
+      position:relative;
+      overflow:hidden;
+      transition:transform var(--anim) var(--ease),filter var(--anim) var(--ease);
+      min-width:120px;
     }
-    .btn:hover{ transform: translateY(-2px); filter: saturate(1.05); }
-    .btn:active{ transform: translateY(0px) scale(.99); }
-
     .btn.secondary{
-      color: rgba(232,238,247,.92);
-      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
-      border: 1px solid rgba(34,211,166,.22);
-      box-shadow: 0 10px 25px rgba(0,0,0,.22);
+      background:#020617;
+      color:var(--tg-text);
+      border:1px solid rgba(148,163,184,.5);
+      box-shadow:none;
     }
-    .btn.danger{
-      color: #1a0707;
-      background: linear-gradient(135deg, #ff7a7a, #ffb0b0);
-      box-shadow: 0 12px 30px rgba(255,107,107,.18);
-    }
-
+    .btn:active{transform:translateY(0) scale(.97);}
+    .btn:hover{transform:translateY(-1px);filter:saturate(1.05);}
     .ripple{
       position:absolute;
       border-radius:999px;
-      transform: scale(0);
-      animation: ripple 520ms var(--ease);
-      background: rgba(255,255,255,.38);
+      background:rgba(255,255,255,.35);
+      transform:scale(0);
+      animation:ripple 480ms var(--ease);
       pointer-events:none;
-      mix-blend-mode: overlay;
-    }
-    @keyframes ripple{
-      to{ transform: scale(14); opacity: 0; }
+      mix-blend-mode:overlay;
     }
 
-    /* Output box with shimmer */
     .out{
-      border-radius: var(--radius-sm);
-      border: 1px solid rgba(34,211,166,.18);
-      background: rgba(0,0,0,.35);
-      padding: 12px;
-      min-height: 112px;
-      font-family: var(--mono);
-      font-size: 12px;
-      color: rgba(34,211,166,.95);
-      word-break: break-all;
+      border-radius:var(--radius-sm);
+      border:1px solid rgba(148,163,184,.5);
+      background:#020617;
+      padding:10px;
+      font-family:var(--mono);
+      font-size:12px;
+      min-height:90px;
+      word-break:break-all;
       overflow:auto;
-      position: relative;
+      position:relative;
     }
     .out.loading::after{
       content:"";
       position:absolute;
-      inset: 0;
-      background:
-        linear-gradient(90deg,
-          transparent 0%,
-          rgba(255,255,255,.06) 35%,
-          rgba(255,255,255,.12) 50%,
-          rgba(255,255,255,.06) 65%,
-          transparent 100%);
-      transform: translateX(-100%);
-      animation: shimmer 900ms linear infinite;
+      inset:0;
+      background:linear-gradient(90deg,transparent,rgba(248,250,252,.08),transparent);
+      transform:translateX(-100%);
+      animation:shimmer 900ms linear infinite;
       pointer-events:none;
     }
-    @keyframes shimmer{
-      to{ transform: translateX(100%); }
+
+    .meta{
+      font-size:11px;
+      color:var(--tg-hint);
     }
 
-    /* Toasts */
     .toast-wrap{
-      position: fixed;
-      left: 0; right: 0;
-      bottom: calc(var(--safe-bottom) + 12px);
+      position:fixed;
+      left:0;right:0;
+      bottom:calc(var(--safe-bottom)+10px);
       display:flex;
       justify-content:center;
       pointer-events:none;
-      z-index: 50;
-      padding: 0 14px;
+      padding:0 12px;
+      z-index:40;
     }
     .toast{
       pointer-events:auto;
-      max-width: 920px;
-      width: 100%;
-      border-radius: 16px;
-      border: 1px solid var(--tg-border);
-      background: rgba(8,12,18,.82);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      box-shadow: var(--shadow);
-      padding: 12px 14px;
+      max-width:900px;
+      width:100%;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.5);
+      background:rgba(15,23,42,.95);
+      padding:8px 12px;
+      font-size:11px;
       display:flex;
-      align-items:flex-start;
-      gap: 10px;
-      transform: translateY(14px);
-      opacity: 0;
-      transition: opacity var(--anim) var(--ease), transform var(--anim) var(--ease);
+      align-items:center;
+      gap:6px;
+      opacity:0;
+      transform:translateY(10px);
+      transition:opacity var(--anim) var(--ease),transform var(--anim) var(--ease);
     }
-    .toast.show{ opacity: 1; transform: translateY(0px); }
-    .toast .t{
-      font-family: var(--mono);
-      font-size: 12px;
-      color: rgba(232,238,247,.9);
-      line-height: 1.35;
-    }
+    .toast.show{opacity:1;transform:translateY(0);}
     .pill{
-      width: 10px; height: 10px; border-radius: 999px; margin-top: 4px;
-      background: var(--tg-accent);
-      box-shadow: 0 0 0 6px rgba(34,211,166,.12);
-      flex: 0 0 auto;
+      width:8px;height:8px;border-radius:999px;
+      background:var(--tg-accent);
     }
-    .pill.err{ background: var(--tg-danger); box-shadow: 0 0 0 6px rgba(255,107,107,.12); }
-    .pill.warn{ background: #ffd166; box-shadow: 0 0 0 6px rgba(255,209,102,.14); }
+    .pill.err{background:#f97373;}
+    .pill.warn{background:#eab308;}
 
-    /* Sections */
-    .section{ display:none; }
-    .section.active{ display:block; animation: fadeUp var(--anim-slow) var(--ease); }
-
-    /* Footer */
     .footer{
-      opacity: .7;
       text-align:center;
-      font-size: 11px;
-      color: var(--tg-hint);
-      padding: 10px 4px 2px;
+      font-size:10px;
+      color:var(--tg-hint);
+      margin-top:4px;
+      opacity:.7;
     }
 
     @keyframes fadeUp{
-      from{ opacity: 0; transform: translateY(8px); }
-      to{ opacity: 1; transform: translateY(0px); }
-    }
-    @keyframes pop{
-      from{ opacity: 0; transform: translateY(10px) scale(.99); }
-      to{ opacity: 1; transform: translateY(0px) scale(1); }
+      from{opacity:0;transform:translateY(6px);}
+      to{opacity:1;transform:translateY(0);}
     }
     @keyframes pulse{
-      0%, 100%{ opacity: 1; transform: scale(1); }
-      50%{ opacity: .55; transform: scale(.96); }
+      0%,100%{opacity:1;transform:scale(1);}
+      50%{opacity:.55;transform:scale(.94);}
+    }
+    @keyframes ripple{
+      to{transform:scale(16);opacity:0;}
+    }
+    @keyframes shimmer{
+      to{transform:translateX(100%);}
     }
   </style>
 </head>
-
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <div class="brand">
-        <h1><span class="dot"></span> ШИФРОТЕКС</h1>
-        <div class="chip">Локальная обработка • AES‑GCM • Telegram WebApp ready</div>
-      </div>
-      <div class="chip" id="runtimeInfo">Готово</div>
-    </div>
+<div class="wrap">
+  <div class="topbar">
+    <span><span class="dot"></span>ШИФРОТЕКС</span>
+    <span id="runtime">Готово</span>
+  </div>
 
-    <div class="tabs" id="tabs">
-      <button class="tab active" data-tab="enc">Шифрование</button>
-      <button class="tab" data-tab="dec">Дешифрование</button>
-      <button class="tab" data-tab="key">Ключи</button>
-      <button class="tab" data-tab="log">Журнал</button>
-    </div>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="msg">Сообщение</button>
+    <button class="tab" data-tab="enc">Шифр</button>
+    <button class="tab" data-tab="dec">Дешифр</button>
+    <button class="tab" data-tab="log">Журнал</button>
+  </div>
 
-    <!-- ШИФРОВАНИЕ -->
-    <section class="section active" id="sec-enc">
-      <div class="grid">
-        <div class="card">
-          <div class="title">
-            <div class="h">📝 Исходные данные</div>
-            <div class="badge">Режим: AES‑GCM</div>
-          </div>
-
-          <div class="group">
-            <label for="pt">Текст <span class="hint">Без отправки на сервер</span></label>
-            <textarea id="pt" placeholder="Введите текст..."></textarea>
-          </div>
-
-          <div class="row">
-            <div class="group">
-              <label for="encAlgo">Алгоритм</label>
-              <select id="encAlgo">
-                <option value="aes256">AES‑256‑GCM</option>
-                <option value="aes192">AES‑192‑GCM</option>
-                <option value="aes128">AES‑128‑GCM</option>
-              </select>
-            </div>
-            <div class="group">
-              <label for="encPass">Пароль/ключ <span class="hint">мин. 8 символов</span></label>
-              <input id="encPass" type="password" placeholder="Введите пароль..." />
-            </div>
-          </div>
-
-          <div class="group">
-            <div class="switch">
-              <input id="showEnc" type="checkbox" />
-              <span>Показать пароль</span>
-            </div>
-          </div>
-
-          <div class="btns">
-            <button class="btn" id="btnGenPass">Сгенерировать</button>
-            <button class="btn secondary" id="btnCopyPass">Скопировать</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="title">
-            <div class="h">🔐 Результат</div>
-            <div class="badge" id="encMeta">0 символов</div>
-          </div>
-
-          <div class="group">
-            <label>Зашифрованные данные <span class="hint">Base64 (IV + ciphertext)</span></label>
-            <div class="out" id="ctOut"></div>
-          </div>
-
-          <div class="btns">
-            <button class="btn" id="btnEncrypt">Шифровать</button>
-            <button class="btn secondary" id="btnCopyCT">Скопировать</button>
-            <button class="btn secondary" id="btnSaveCT">Скачать</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ДЕШИФРОВАНИЕ -->
-    <section class="section" id="sec-dec">
-      <div class="grid">
-        <div class="card">
-          <div class="title">
-            <div class="h">📥 Ввод</div>
-            <div class="badge">Авто‑подбор AES‑ключа</div>
-          </div>
-
-          <div class="group">
-            <label for="ct">Зашифрованный текст <span class="hint">Вставьте Base64</span></label>
-            <textarea id="ct" placeholder="Вставьте зашифрованные данные..."></textarea>
-          </div>
-
-          <div class="group">
-            <label for="decPass">Пароль</label>
-            <input id="decPass" type="password" placeholder="Введите пароль..." />
-          </div>
-
-          <div class="group">
-            <div class="switch">
-              <input id="showDec" type="checkbox" />
-              <span>Показать пароль</span>
-            </div>
-          </div>
-
-          <div class="btns">
-            <button class="btn" id="btnDecrypt">Дешифровать</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="title">
-            <div class="h">📤 Вывод</div>
-            <div class="badge" id="decMeta">0 символов</div>
-          </div>
-
-          <div class="group">
-            <label>Расшифрованный текст</label>
-            <div class="out" id="ptOut"></div>
-          </div>
-
-          <div class="btns">
-            <button class="btn secondary" id="btnCopyPT">Скопировать</button>
-            <button class="btn secondary" id="btnSavePT">Скачать</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- КЛЮЧИ -->
-    <section class="section" id="sec-key">
-      <div class="grid">
-        <div class="card">
-          <div class="title">
-            <div class="h">🔑 Генерация ключей</div>
-            <div class="badge">crypto.getRandomValues</div>
-          </div>
-
-          <div class="row">
-            <div class="group">
-              <label for="keyType">Тип</label>
-              <select id="keyType">
-                <option value="password">Пароль</option>
-                <option value="hex256">HEX 256 бит</option>
-                <option value="b64256">Base64 256 бит</option>
-              </select>
-            </div>
-            <div class="group" id="lenGroup">
-              <label for="keyLen">Длина</label>
-              <select id="keyLen">
-                <option value="16">16</option>
-                <option value="24">24</option>
-                <option value="32" selected>32</option>
-                <option value="64">64</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="btns">
-            <button class="btn" id="btnGenKey">Сгенерировать</button>
-            <button class="btn secondary" id="btnUseKey">В шифрование</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="title">
-            <div class="h">🧾 Сгенерировано</div>
-            <div class="badge" id="keyMeta">—</div>
-          </div>
-
-          <div class="group">
-            <label>Ключ/пароль</label>
-            <div class="out" id="keyOut"></div>
-          </div>
-
-          <div class="btns">
-            <button class="btn secondary" id="btnCopyKey">Скопировать</button>
-            <button class="btn secondary" id="btnSaveKey">Скачать</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ЖУРНАЛ -->
-    <section class="section" id="sec-log">
+  <!-- Вкладка: Сообщение (авто-расшифровка пароля и текста) -->
+  <section class="section active" id="sec-msg">
+    <div class="grid">
       <div class="card">
         <div class="title">
-          <div class="h">📋 Журнал операций</div>
-          <div class="badge" id="logMeta">0 записей</div>
+          <span>Вход</span>
         </div>
-
-        <div class="group">
-          <label>События</label>
-          <div class="out" id="logOut" style="color: rgba(232,238,247,.78); min-height: 220px;"></div>
+        <label for="bundleIn">Сообщение</label>
+        <textarea id="bundleIn" placeholder="Вставьте сообщение с двумя строками:
+пароль: ...
+текст: ..."></textarea>
+        <label for="masterPass">Мастер-пароль</label>
+        <input id="masterPass" type="password" placeholder="Пароль, которым шифровали пароль" />
+        <div class="switch">
+          <input id="showMaster" type="checkbox">
+          <span>Показать</span>
         </div>
-
         <div class="btns">
-          <button class="btn secondary" id="btnExportLog">Экспорт</button>
-          <button class="btn danger" id="btnClearLog">Очистить</button>
+          <button class="btn" id="btnBundle">Расшифровать</button>
         </div>
       </div>
-    </section>
-
-    <div class="footer">
-      ⚠ Рекомендация: для «гос‑уровня» соответствия нужны сертифицированные ГОСТ‑алгоритмы и среда выполнения; браузерный WebCrypto даёт сильную практическую защиту, но не является сертифицированным средством.
+      <div class="card">
+        <div class="title">
+          <span>Результат</span>
+        </div>
+        <label>Открытый текст</label>
+        <div class="out" id="bundleOut"></div>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <div class="toast-wrap">
-    <div class="toast" id="toast">
-      <div class="pill" id="toastPill"></div>
-      <div class="t" id="toastText"></div>
+  <!-- Вкладка: обычное шифрование -->
+  <section class="section" id="sec-enc">
+    <div class="grid">
+      <div class="card">
+        <div class="title"><span>Вход</span></div>
+        <label for="pt">Текст</label>
+        <textarea id="pt" placeholder="Введите текст..."></textarea>
+        <div class="row">
+          <div>
+            <label for="encAlgo">Алгоритм</label>
+            <select id="encAlgo">
+              <option value="aes256">AES-256-GCM</option>
+              <option value="aes192">AES-192-GCM</option>
+              <option value="aes128">AES-128-GCM</option>
+            </select>
+          </div>
+          <div>
+            <label for="encPass">Пароль</label>
+            <input id="encPass" type="password" placeholder="Пароль" />
+          </div>
+        </div>
+        <div class="switch">
+          <input id="showEnc" type="checkbox"><span>Показать</span>
+        </div>
+        <div class="btns">
+          <button class="btn" id="btnGenPass">Пароль</button>
+          <button class="btn secondary" id="btnCopyPass">Копия</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="title">
+          <span>Шифр</span>
+          <span class="meta" id="encMeta">0</span>
+        </div>
+        <div class="out" id="ctOut"></div>
+        <div class="btns">
+          <button class="btn" id="btnEncrypt">Шифровать</button>
+          <button class="btn secondary" id="btnCopyCT">Копия</button>
+          <button class="btn secondary" id="btnSaveCT">Файл</button>
+        </div>
+      </div>
     </div>
+  </section>
+
+  <!-- Вкладка: обычное дешифрование -->
+  <section class="section" id="sec-dec">
+    <div class="grid">
+      <div class="card">
+        <div class="title"><span>Вход</span></div>
+        <label for="ct">Шифр</label>
+        <textarea id="ct" placeholder="Вставьте Base64..."></textarea>
+        <label for="decPass">Пароль</label>
+        <input id="decPass" type="password" placeholder="Пароль" />
+        <div class="switch">
+          <input id="showDec" type="checkbox"><span>Показать</span>
+        </div>
+        <div class="btns">
+          <button class="btn" id="btnDecrypt">Дешифровать</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="title">
+          <span>Текст</span>
+          <span class="meta" id="decMeta">0</span>
+        </div>
+        <div class="out" id="ptOut"></div>
+        <div class="btns">
+          <button class="btn secondary" id="btnCopyPT">Копия</button>
+          <button class="btn secondary" id="btnSavePT">Файл</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Вкладка: журнал -->
+  <section class="section" id="sec-log">
+    <div class="card">
+      <div class="title">
+        <span>Журнал</span>
+        <span class="meta" id="logMeta">0</span>
+      </div>
+      <div class="out" id="logOut" style="min-height:200px;"></div>
+      <div class="btns">
+        <button class="btn secondary" id="btnExportLog">Экспорт</button>
+        <button class="btn secondary" id="btnClearLog">Очистить</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Локальное шифрование AES‑GCM. Данные не покидают браузер.</div>
+</div>
+
+<div class="toast-wrap">
+  <div class="toast" id="toast">
+    <div class="pill" id="toastPill"></div>
+    <div id="toastText"></div>
   </div>
+</div>
 
 <script>
 (() => {
-  // ========= Telegram WebApp integration =========
   const tg = window.Telegram?.WebApp;
   if (tg) {
-    try {
-      tg.ready();
-      tg.expand(); // расширить окно мини-приложения [web:5]
-      // Цвета (по документации Telegram Mini Apps theming) [web:13]
-      const tp = tg.themeParams || {};
-      if (tp.bg_color) document.documentElement.style.setProperty('--tg-bg', tp.bg_color);
-      if (tp.secondary_bg_color) document.documentElement.style.setProperty('--tg-secondary-bg', tp.secondary_bg_color);
-      if (tp.text_color) document.documentElement.style.setProperty('--tg-text', tp.text_color);
-      if (tp.hint_color) document.documentElement.style.setProperty('--tg-hint', tp.hint_color);
-      if (tp.button_color) document.documentElement.style.setProperty('--tg-accent', tp.button_color);
-      // Можно попробовать подкрасить нативные области:
-      if (tg.setHeaderColor) tg.setHeaderColor(tp.secondary_bg_color || '#0b0f14');
-      if (tg.setBackgroundColor) tg.setBackgroundColor(tp.bg_color || '#0b0f14');
-    } catch (e) {}
+    try{tg.ready();tg.expand();}catch(e){}
   }
 
-  // ========= Helpers =========
-  const $ = (id) => document.getElementById(id);
-  const runtimeInfo = $('runtimeInfo');
+  const $ = id => document.getElementById(id);
+
+  const runtime = $('runtime');
+  const toastEl = $('toast'), toastPill = $('toastPill'), toastText = $('toastText');
+  let toastTimer = null;
+  function toast(kind,text){
+    toastText.textContent = text;
+    toastPill.className = 'pill' + (kind==='error'?' err':kind==='warn'?' warn':'');
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>toastEl.classList.remove('show'),2000);
+  }
+
+  function ripple(e){
+    const btn = e.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    const x = (e.clientX ?? rect.left+rect.width/2) - rect.left;
+    const y = (e.clientY ?? rect.top+rect.height/2) - rect.top;
+    const s = document.createElement('span');
+    s.className='ripple';
+    s.style.left=x+'px';
+    s.style.top=y+'px';
+    s.style.width='12px';
+    s.style.height='12px';
+    btn.appendChild(s);
+    setTimeout(()=>s.remove(),500);
+  }
+  document.querySelectorAll('button').forEach(b=>b.addEventListener('pointerdown',ripple,{passive:true}));
 
   const log = [];
-  const logOut = $('logOut');
-  const logMeta = $('logMeta');
-
-  function ts() {
-    return new Date().toLocaleString('ru-RU');
-  }
-
-  function haptic(type='impact', style='light'){
-    const h = tg?.HapticFeedback;
-    try {
-      if (!h) return;
-      if (type === 'impact' && h.impactOccurred) h.impactOccurred(style);
-      if (type === 'notify' && h.notificationOccurred) h.notificationOccurred(style); // 'success'|'warning'|'error'
-    } catch (e) {}
-  }
-
-  function addLog(op, status, details=''){
-    log.push({ t: ts(), op, status, details });
-    if (log.length > 400) log.shift();
+  function addLog(op,status,info=''){
+    log.push({t:new Date().toLocaleString('ru-RU'),op,status,info});
+    if(log.length>300)log.shift();
     renderLog();
   }
-
   function renderLog(){
-    logMeta.textContent = `${log.length} записей`;
-    if (!log.length) {
-      logOut.textContent = 'Журнал пуст.';
-      return;
-    }
-    logOut.textContent = log.slice().reverse().map(x =>
-      `[${x.t}] ${x.op} [${x.status}]${x.details ? ' — ' + x.details : ''}`
-    ).join('\n');
+    $('logMeta').textContent=log.length;
+    $('logOut').textContent=log.slice().reverse().map(x=>`[${x.t}] ${x.op} [${x.status}]${x.info?' — '+x.info:''}`).join('\n')||'Пусто';
   }
 
-  let toastTimer = null;
-  function toast(kind, text){
-    const t = $('toast'), pill = $('toastPill'), tt = $('toastText');
-    tt.textContent = text;
-    pill.className = 'pill' + (kind==='error' ? ' err' : kind==='warn' ? ' warn' : '');
-    t.classList.add('show');
-
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
-
-    if (kind==='ok') haptic('notify','success');
-    if (kind==='warn') haptic('notify','warning');
-    if (kind==='error') haptic('notify','error');
+  function setLoading(el,on){
+    el.classList.toggle('loading',!!on);
   }
 
-  function bytesToHex(u8){
-    return Array.from(u8).map(b => b.toString(16).padStart(2,'0')).join('');
-  }
   function u8ToB64(u8){
-    let s = '';
-    for (let i=0;i<u8.length;i++) s += String.fromCharCode(u8[i]);
-    return btoa(s);
+    let s='';for(let i=0;i<u8.length;i++)s+=String.fromCharCode(u8[i]);return btoa(s);
   }
   function b64ToU8(b64){
-    const bin = atob(b64.trim());
-    const u8 = new Uint8Array(bin.length);
-    for (let i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
+    const bin=atob(b64.trim());const u8=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
     return u8;
   }
-
   async function sha256Bytes(str){
-    const enc = new TextEncoder().encode(str);
-    const hash = await crypto.subtle.digest('SHA-256', enc);
-    return new Uint8Array(hash);
+    const enc=new TextEncoder().encode(str);
+    const h=await crypto.subtle.digest('SHA-256',enc);
+    return new Uint8Array(h);
   }
-
-  async function deriveKeyBytes(password, algo){
-    const hash = await sha256Bytes(password);
-    const keyLen = (algo==='aes256') ? 32 : (algo==='aes192') ? 24 : 16;
-    return hash.slice(0, keyLen);
-  }
-
-  function setLoading(outEl, yes){
-    outEl.classList.toggle('loading', !!yes);
+  async function deriveKeyBytes(pass,algo){
+    const h=await sha256Bytes(pass);
+    const len=algo==='aes256'?32:algo==='aes192'?24:16;
+    return h.slice(0,len);
   }
 
   async function copyText(text){
-    if (!text) { toast('warn', 'Нечего копировать'); return; }
-    try{
-      await navigator.clipboard.writeText(text);
-      toast('ok', 'Скопировано');
-      // В Telegram часто удобно: showPopup/closing not needed.
-    }catch(e){
-      toast('error', 'Не удалось скопировать (ограничения браузера)');
-    }
+    if(!text){toast('warn','Пусто');return;}
+    try{await navigator.clipboard.writeText(text);toast('ok','Скопировано');}
+    catch(e){toast('error','Нет доступа к буферу');}
+  }
+  function saveText(text,name){
+    if(!text){toast('warn','Пусто');return;}
+    const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+    toast('ok','Файл сохранён');
   }
 
-  function saveText(text, filename){
-    if (!text) { toast('warn', 'Нет данных для сохранения'); return; }
-    const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    toast('ok', 'Файл сохранён');
-  }
-
-  // ========= Ripple =========
-  function addRipple(e){
-    const btn = e.currentTarget;
-    const rect = btn.getBoundingClientRect();
-    const x = (e.clientX ?? (rect.left + rect.width/2)) - rect.left;
-    const y = (e.clientY ?? (rect.top + rect.height/2)) - rect.top;
-    const span = document.createElement('span');
-    span.className = 'ripple';
-    span.style.left = x + 'px';
-    span.style.top = y + 'px';
-    span.style.width = '12px';
-    span.style.height = '12px';
-    btn.appendChild(span);
-    setTimeout(() => span.remove(), 620);
-  }
-  document.querySelectorAll('button').forEach(b => b.addEventListener('pointerdown', addRipple, {passive:true}));
-
-  // ========= Tabs =========
-  const tabButtons = Array.from(document.querySelectorAll('.tab'));
-  const sections = {
-    enc: $('sec-enc'),
-    dec: $('sec-dec'),
-    key: $('sec-key'),
-    log: $('sec-log'),
+  // Tabs
+  const tabs=document.querySelectorAll('.tab');
+  const sections={
+    msg:$('sec-msg'),
+    enc:$('sec-enc'),
+    dec:$('sec-dec'),
+    log:$('sec-log')
   };
-  function setTab(name){
-    tabButtons.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
-    Object.entries(sections).forEach(([k, el]) => el.classList.toggle('active', k === name));
-    addLog('ПЕРЕКЛЮЧЕНИЕ', 'OK', `Вкладка: ${name}`);
-    haptic('impact','light');
+  tabs.forEach(b=>b.addEventListener('click',()=>{
+    const t=b.dataset.tab;
+    tabs.forEach(x=>x.classList.toggle('active',x===b));
+    Object.entries(sections).forEach(([k,el])=>el.classList.toggle('active',k===t));
+    addLog('TAB','OK',t);
+  }));
+
+  // Show/hide
+  $('showEnc').addEventListener('change',e=>$('encPass').type=e.target.checked?'text':'password');
+  $('showDec').addEventListener('change',e=>$('decPass').type=e.target.checked?'text':'password');
+  $('showMaster').addEventListener('change',e=>$('masterPass').type=e.target.checked?'text':'password');
+
+  // Password/keys
+  function genPassword(len=32){
+    const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=';
+    const rnd=new Uint32Array(len);crypto.getRandomValues(rnd);
+    let p='';for(let i=0;i<len;i++)p+=chars[rnd[i]%chars.length];
+    return p;
   }
-  tabButtons.forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
-
-  // ========= Show password toggles =========
-  $('showEnc').addEventListener('change', (e) => $('encPass').type = e.target.checked ? 'text' : 'password');
-  $('showDec').addEventListener('change', (e) => $('decPass').type = e.target.checked ? 'text' : 'password');
-
-  // ========= Key generation =========
-  const keyOut = $('keyOut');
-  const keyMeta = $('keyMeta');
-
-  function genPassword(len){
-    const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const lower = 'abcdefghijklmnopqrstuvwxyz';
-    const nums  = '0123456789';
-    const spec  = '!@#$%^&*()_+-=[]{}|;:,.<>?';
-    const chars = upper + lower + nums + spec;
-
-    const rnd = new Uint32Array(len);
-    crypto.getRandomValues(rnd);
-    let out = '';
-    for (let i=0;i<len;i++) out += chars[rnd[i] % chars.length];
-    return out;
-  }
-
-  function genKey(){
-    const type = $('keyType').value;
-    const len = parseInt($('keyLen').value, 10);
-    let v = '';
-
-    if (type === 'password') v = genPassword(len);
-    if (type === 'hex256') v = bytesToHex(crypto.getRandomValues(new Uint8Array(32)));
-    if (type === 'b64256') v = u8ToB64(crypto.getRandomValues(new Uint8Array(32)));
-
-    keyOut.textContent = v;
-    keyMeta.textContent = `${v.length} символов`;
-    toast('ok','Ключ сгенерирован');
-    addLog('ГЕНЕРАЦИЯ КЛЮЧА', 'OK', type);
-  }
-
-  $('keyType').addEventListener('change', () => {
-    const isPass = $('keyType').value === 'password';
-    $('lenGroup').style.display = isPass ? '' : 'none';
+  $('btnGenPass').addEventListener('click',()=>{
+    $('encPass').value=genPassword(32);
+    toast('ok','Пароль');
+    addLog('PWD','OK','32');
   });
+  $('btnCopyPass').addEventListener('click',()=>copyText($('encPass').value));
 
-  $('btnGenKey').addEventListener('click', genKey);
-  $('btnUseKey').addEventListener('click', () => {
-    const v = keyOut.textContent.trim();
-    if (!v) return toast('warn','Сначала сгенерируйте ключ');
-    $('encPass').value = v;
-    setTab('enc');
-    toast('ok','Ключ вставлен в шифрование');
-    addLog('ИСПОЛЬЗОВАНИЕ КЛЮЧА', 'OK', 'В поле шифрования');
-  });
+  // Encrypt
+  $('btnEncrypt').addEventListener('click',async()=>{
+    const pt=$('pt').value;
+    const pass=$('encPass').value;
+    const algo=$('encAlgo').value;
+    if(!pt.trim()){toast('warn','Нет текста');return;}
+    if(!pass||pass.length<8){toast('warn','Пароль < 8');return;}
 
-  $('btnCopyKey').addEventListener('click', () => copyText(keyOut.textContent.trim()));
-  $('btnSaveKey').addEventListener('click', () => saveText(keyOut.textContent.trim(), 'key.txt'));
-
-  // ========= Encrypt/Decrypt =========
-  const ctOut = $('ctOut');
-  const ptOut = $('ptOut');
-  const encMeta = $('encMeta');
-  const decMeta = $('decMeta');
-
-  $('btnGenPass').addEventListener('click', () => {
-    $('encPass').value = genPassword(32);
-    toast('ok','Пароль сгенерирован');
-    addLog('ГЕНЕРАЦИЯ ПАРОЛЯ', 'OK', '32 символа');
-    haptic('impact','medium');
-  });
-
-  $('btnCopyPass').addEventListener('click', () => copyText($('encPass').value));
-
-  $('btnEncrypt').addEventListener('click', async () => {
-    const pt = $('pt').value;
-    const pass = $('encPass').value;
-    const algo = $('encAlgo').value;
-
-    if (!pt.trim()) return toast('warn','Введите текст');
-    if (!pass) return toast('warn','Введите пароль');
-    if (pass.length < 8) return toast('warn','Пароль слишком короткий (мин. 8)');
-
-    setLoading(ctOut, true);
-    runtimeInfo.textContent = 'Шифрование...';
-
+    const out=$('ctOut');
+    setLoading(out,true);runtime.textContent='Шифрование...';
     try{
-      const keyBytes = await deriveKeyBytes(pass, algo);
-      const iv = crypto.getRandomValues(new Uint8Array(12));
-      const key = await crypto.subtle.importKey('raw', keyBytes, 'AES-GCM', false, ['encrypt']);
-      const data = new TextEncoder().encode(pt);
-
-      const encrypted = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, data);
-      const encU8 = new Uint8Array(encrypted);
-
-      const combined = new Uint8Array(iv.length + encU8.length);
-      combined.set(iv, 0);
-      combined.set(encU8, iv.length);
-
-      const b64 = u8ToB64(combined);
-      ctOut.textContent = b64;
-      encMeta.textContent = `${b64.length} символов`;
-
-      toast('ok','Зашифровано');
-      addLog('ШИФРОВАНИЕ', 'OK', algo);
-      haptic('impact','heavy');
+      const keyBytes=await deriveKeyBytes(pass,algo);
+      const iv=crypto.getRandomValues(new Uint8Array(12));
+      const key=await crypto.subtle.importKey('raw',keyBytes,'AES-GCM',false,['encrypt']);
+      const data=new TextEncoder().encode(pt);
+      const enc=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,data);
+      const encU8=new Uint8Array(enc);
+      const combined=new Uint8Array(iv.length+encU8.length);
+      combined.set(iv,0);combined.set(encU8,iv.length);
+      const b64=u8ToB64(combined);
+      out.textContent=b64;
+      $('encMeta').textContent=b64.length;
+      toast('ok','Готово');
+      addLog('ENC','OK',algo);
     }catch(e){
+      out.textContent='';
       toast('error','Ошибка шифрования');
-      addLog('ШИФРОВАНИЕ', 'ERR', e?.message || 'unknown');
+      addLog('ENC','ERR',e.message||'err');
     }finally{
-      setLoading(ctOut,false);
-      runtimeInfo.textContent = 'Готово';
+      setLoading(out,false);runtime.textContent='Готово';
     }
   });
+  $('btnCopyCT').addEventListener('click',()=>copyText($('ctOut').textContent.trim()));
+  $('btnSaveCT').addEventListener('click',()=>saveText($('ctOut').textContent.trim(),'encrypted.txt'));
 
-  $('btnDecrypt').addEventListener('click', async () => {
-    const b64 = $('ct').value.trim();
-    const pass = $('decPass').value;
+  // Decrypt
+  $('btnDecrypt').addEventListener('click',async()=>{
+    const b64=$('ct').value.trim();
+    const pass=$('decPass').value;
+    const out=$('ptOut');
+    if(!b64){toast('warn','Нет данных');return;}
+    if(!pass){toast('warn','Нет пароля');return;}
 
-    if (!b64) return toast('warn','Вставьте зашифрованные данные');
-    if (!pass) return toast('warn','Введите пароль');
-
-    setLoading(ptOut,true);
-    runtimeInfo.textContent = 'Дешифрование...';
-
+    setLoading(out,true);runtime.textContent='Дешифрование...';
     try{
-      const combined = b64ToU8(b64);
-      if (combined.length < 13) throw new Error('Слишком короткие данные');
-      const iv = combined.slice(0,12);
-      const encData = combined.slice(12);
-
-      const algos = ['aes256','aes192','aes128'];
-      let ok = false;
-      for (const algo of algos){
+      const combined=b64ToU8(b64);
+      if(combined.length<13)throw new Error('short');
+      const iv=combined.slice(0,12);
+      const enc=combined.slice(12);
+      const algos=['aes256','aes192','aes128'];
+      let ok=false;
+      for(const algo of algos){
         try{
-          const keyBytes = await deriveKeyBytes(pass, algo);
-          const key = await crypto.subtle.importKey('raw', keyBytes, 'AES-GCM', false, ['decrypt']);
-          const plainBuf = await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, encData);
-          const plain = new TextDecoder().decode(plainBuf);
-          ptOut.textContent = plain;
-          decMeta.textContent = `${plain.length} символов`;
-          ok = true;
-          addLog('ДЕШИФРОВАНИЕ', 'OK', `algo=${algo}`);
-          toast('ok','Расшифровано');
-          haptic('impact','heavy');
+          const keyBytes=await deriveKeyBytes(pass,algo);
+          const key=await crypto.subtle.importKey('raw',keyBytes,'AES-GCM',false,['decrypt']);
+          const buf=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,enc);
+          const txt=new TextDecoder().decode(buf);
+          out.textContent=txt;
+          $('decMeta').textContent=txt.length;
+          ok=true;
+          addLog('DEC','OK',algo);
           break;
         }catch(_e){}
       }
-      if (!ok) throw new Error('Неверный пароль или повреждённые данные');
+      if(!ok)throw new Error('bad');
+      toast('ok','Готово');
     }catch(e){
-      ptOut.textContent = '';
-      decMeta.textContent = '0 символов';
-      toast('error','Не удалось расшифровать');
-      addLog('ДЕШИФРОВАНИЕ', 'ERR', e?.message || 'unknown');
+      out.textContent='';
+      $('decMeta').textContent='0';
+      toast('error','Ошибка');
+      addLog('DEC','ERR',e.message||'err');
     }finally{
-      setLoading(ptOut,false);
-      runtimeInfo.textContent = 'Готово';
+      setLoading(out,false);runtime.textContent='Готово';
+    }
+  });
+  $('btnCopyPT').addEventListener('click',()=>copyText($('ptOut').textContent.trim()));
+  $('btnSavePT').addEventListener('click',()=>saveText($('ptOut').textContent.trim(),'decrypted.txt'));
+
+  // Bundle tab: message -> decrypt password -> decrypt text
+  $('btnBundle').addEventListener('click',async()=>{
+    const msg=$('bundleIn').value.trim();
+    const master=$('masterPass').value;
+    const out=$('bundleOut');
+    if(!msg){toast('warn','Нет сообщения');return;}
+    if(!master){toast('warn','Нет пароля');return;}
+
+    // формат:
+    // пароль: <base64>
+    // текст: <base64>
+    const lines=msg.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+    let encPwd='',encTxt='';
+    for(const l of lines){
+      if(l.toLowerCase().startsWith('пароль:')) encPwd=l.split(':').slice(1).join(':').trim();
+      else if(l.toLowerCase().startsWith('текст:')) encTxt=l.split(':').slice(1).join(':').trim();
+    }
+    if(!encPwd || !encTxt){toast('warn','Неверный формат');return;}
+
+    setLoading(out,true);runtime.textContent='Авто‑расшифровка...';
+    try{
+      const combinedPwd=b64ToU8(encPwd);
+      const ivPwd=combinedPwd.slice(0,12);
+      const encPwdData=combinedPwd.slice(12);
+      const keyBytes=await deriveKeyBytes(master,'aes256');
+      const key=await crypto.subtle.importKey('raw',keyBytes,'AES-GCM',false,['decrypt']);
+      const pwdBuf=await crypto.subtle.decrypt({name:'AES-GCM',iv:ivPwd},key,encPwdData);
+      const realPwd=new TextDecoder().decode(pwdBuf); // пароль для текста
+
+      const combinedTxt=b64ToU8(encTxt);
+      const ivTxt=combinedTxt.slice(0,12);
+      const encTxtData=combinedTxt.slice(12);
+      const key2=await crypto.subtle.importKey('raw',(await deriveKeyBytes(realPwd,'aes256')),'AES-GCM',false,['decrypt']);
+      const txtBuf=await crypto.subtle.decrypt({name:'AES-GCM',iv:ivTxt},key2,encTxtData);
+      const txt=new TextDecoder().decode(txtBuf);
+      out.textContent=txt;
+      addLog('BUNDLE','OK','пароль+текст');
+      toast('ok','Готово');
+    }catch(e){
+      out.textContent='';
+      toast('error','Ошибка сообщения');
+      addLog('BUNDLE','ERR',e.message||'err');
+    }finally{
+      setLoading(out,false);runtime.textContent='Готово';
     }
   });
 
-  $('btnCopyCT').addEventListener('click', () => copyText(ctOut.textContent.trim()));
-  $('btnSaveCT').addEventListener('click', () => saveText(ctOut.textContent.trim(), 'encrypted.txt'));
-  $('btnCopyPT').addEventListener('click', () => copyText(ptOut.textContent.trim()));
-  $('btnSavePT').addEventListener('click', () => saveText(ptOut.textContent.trim(), 'decrypted.txt'));
-
-  // ========= Log export/clear =========
-  $('btnExportLog').addEventListener('click', () => {
-    const text = log.slice().map(x => `[${x.t}] ${x.op} [${x.status}]${x.details ? ' — ' + x.details : ''}`).join('\n');
-    saveText(text || 'Журнал пуст.', 'log.txt');
+  // Log control
+  $('btnExportLog').addEventListener('click',()=>{
+    const text=log.map(x=>`[${x.t}] ${x.op} [${x.status}]${x.info?' — '+x.info:''}`).join('\n')||'Пусто';
+    saveText(text,'log.txt');
   });
-  $('btnClearLog').addEventListener('click', () => {
-    log.length = 0;
-    renderLog();
-    toast('ok','Журнал очищен');
-    addLog('ЖУРНАЛ', 'OK', 'очистка');
+  $('btnClearLog').addEventListener('click',()=>{
+    log.length=0;renderLog();toast('ok','Очищено');
   });
 
-  // ========= Init =========
-  addLog('ИНИЦИАЛИЗАЦИЯ', 'OK', tg ? 'Telegram WebApp' : 'Browser');
+  addLog('INIT','OK',tg?'Telegram':'Browser');
   renderLog();
 })();
 </script>
