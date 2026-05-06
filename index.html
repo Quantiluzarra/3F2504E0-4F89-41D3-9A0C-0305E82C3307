@@ -1,721 +1,1703 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="color-scheme" content="dark" />
-  <title>ШИФРОТЕКС</title>
-  <style>
-    :root{
-      --tg-bg:#05070b;
-      --tg-card:rgba(255,255,255,.06);
-      --tg-text:#eef2ff;
-      --tg-hint:rgba(226,232,255,.6);
-      --tg-accent:#22d3a6;
-      --tg-border:rgba(148, 163, 184,.3);
+    <meta charset="UTF-8">
+    <title>Cosmic Defender: Liquid Glass Ultimate</title>
+    <!-- Защита масштабирования для iOS / Safari -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        /* ==========================================================================
+           1. БАЗОВЫЕ ПЕРЕМЕННЫЕ И СБРОС (LIQUID GLASS UI)
+           ========================================================================== */
+        :root {
+            --glass-bg-light: rgba(30, 41, 59, 0.4);
+            --glass-bg-dark: rgba(2, 6, 23, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --glass-highlight: rgba(255, 255, 255, 0.05);
+            --glass-blur: blur(28px) saturate(180%);
+            --accent-main: #38bdf8;
+            --accent-glow: 0 0 25px rgba(56, 189, 248, 0.6);
+            --color-text: #f8fafc;
+            --color-sub: #94a3b8;
+            --color-success: #10b981;
+            --color-danger: #ef4444;
+            --color-warning: #f59e0b;
+            --color-epic: #a855f7;
+            --spring-easing: cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Пружинящая анимация a-la iOS */
+            --fast-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
+            --safe-top: env(safe-area-inset-top, 20px);
+        }
 
-      --radius:16px;
-      --radius-sm:12px;
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+        }
 
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
-      --ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        body, html {
+            width: 100%; height: 100%;
+            background-color: #000;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            overflow: hidden; /* Критично для мобильных (отмена свайпа страницы) */
+            color: var(--color-text);
+            touch-action: none;
+        }
 
-      --safe-top:env(safe-area-inset-top,0px);
-      --safe-bottom:env(safe-area-inset-bottom,0px);
-      --safe-left:env(safe-area-inset-left,0px);
-      --safe-right:env(safe-area-inset-right,0px);
+        /* ==========================================================================
+           2. ИГРОВЫЕ СЛОИ И КАНВАС
+           ========================================================================== */
+        #game-container { position: absolute; inset: 0; z-index: 1; overflow: hidden; }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        #bg-canvas { z-index: 1; }
+        #main-canvas { z-index: 2; }
+        #fx-canvas { z-index: 3; mix-blend-mode: screen; }
 
-      --anim:200ms;
-      --anim-slow:420ms;
-      --ease:cubic-bezier(.2,.8,.2,1);
-    }
+        /* ==========================================================================
+           3. КОМПОНЕНТЫ LIQUID GLASS
+           ========================================================================== */
+        .liquid-glass {
+            background: linear-gradient(135deg, var(--glass-bg-light), var(--glass-bg-dark));
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 24px 48px rgba(0,0,0,0.4), inset 0 1px 0 var(--glass-highlight);
+            border-radius: 24px;
+        }
 
-    @media (prefers-reduced-motion:reduce){
-      :root{--anim:1ms;--anim-slow:1ms;}
-      *{animation-duration:1ms!important;transition-duration:1ms!important;}
-    }
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 99px;
+            color: white; font-weight: 600; font-size: 14px;
+            cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+            transition: all 0.4s var(--spring-easing);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            padding: 12px 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
 
-    *{box-sizing:border-box;}
-    html,body{height:100%;}
-    body{
-      margin:0;
-      font-family:var(--ui);
-      color:var(--tg-text);
-      background:#020617 radial-gradient(circle at 0 0,rgba(34,211,166,.16),transparent 55%);
-      padding:
-        calc(var(--safe-top)+10px)
-        calc(var(--safe-right)+12px)
-        calc(var(--safe-bottom)+12px)
-        calc(var(--safe-left)+12px);
-    }
-    .wrap{
-      max-width:980px;
-      margin:0 auto;
-      display:grid;
-      gap:10px;
-    }
+        .glass-btn:active, .glass-btn:focus {
+            transform: scale(0.92);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
 
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      padding:10px 12px;
-      border-radius:999px;
-      border:1px solid var(--tg-border);
-      background:rgba(15,23,42,.9);
-      backdrop-filter:blur(12px);
-      -webkit-backdrop-filter:blur(12px);
-      font-size:12px;
-      animation:fadeUp var(--anim-slow) var(--ease);
-    }
-    .topbar span:first-child{
-      font-weight:600;
-      letter-spacing:1px;
-      text-transform:uppercase;
-      font-size:11px;
-    }
-    .dot{
-      width:8px;height:8px;border-radius:999px;margin-right:6px;
-      background:var(--tg-accent);
-      box-shadow:0 0 0 4px rgba(34,211,166,.18);
-      animation:pulse 1.9s var(--ease) infinite;
-      display:inline-block;
-    }
+        .glass-btn.primary {
+            background: linear-gradient(135deg, var(--accent-main), #2563eb);
+            border-color: rgba(255,255,255,0.3);
+            box-shadow: var(--accent-glow);
+        }
 
-    .tabs{
-      display:flex;
-      gap:6px;
-      padding:4px;
-      border-radius:999px;
-      border:1px solid var(--tg-border);
-      background:rgba(15,23,42,.9);
-      backdrop-filter:blur(10px);
-      -webkit-backdrop-filter:blur(10px);
-      font-size:11px;
-      animation:fadeUp var(--anim-slow) var(--ease);
-    }
-    .tab{
-      flex:1;
-      border:0;
-      border-radius:999px;
-      padding:8px 10px;
-      background:transparent;
-      color:var(--tg-hint);
-      text-transform:uppercase;
-      letter-spacing:.7px;
-      font-weight:600;
-      cursor:pointer;
-      transition:background var(--anim) var(--ease),color var(--anim) var(--ease),transform var(--anim) var(--ease);
-    }
-    .tab.active{
-      background:var(--tg-accent);
-      color:#020617;
-      transform:translateY(-1px);
-    }
+        .glass-btn.danger { background: linear-gradient(135deg, #f43f5e, #be123c); }
+        .glass-btn.warning { background: linear-gradient(135deg, #fbbf24, #d97706); }
+        .glass-btn:disabled { opacity: 0.4; filter: grayscale(1); pointer-events: none; }
 
-    .section{display:none;}
-    .section.active{display:block;animation:fadeUp var(--anim-slow) var(--ease);}
+        /* ==========================================================================
+           4. HUD - ИНТЕРФЕЙС ВО ВРЕМЯ ИГРЫ
+           ========================================================================== */
+        #hud {
+            position: absolute; inset: 0; z-index: 10;
+            pointer-events: none;
+            padding: max(20px, var(--safe-top)) 20px max(20px, var(--safe-bottom));
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
 
-    .grid{
-      display:grid;
-      grid-template-columns:1.1fr 1fr;
-      gap:10px;
-    }
-    @media (max-width:900px){
-      .grid{grid-template-columns:1fr;}
-    }
+        .hud-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .hud-card { padding: 14px 20px; border-radius: 20px; display: flex; flex-direction: column; gap: 5px; pointer-events: auto; }
+        
+        .hud-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2.5px; color: var(--color-sub); font-weight: 700; }
+        .hud-value { font-size: 26px; font-weight: 800; text-shadow: 0 2px 10px rgba(0,0,0,0.6); font-variant-numeric: tabular-nums; letter-spacing: -0.5px; }
+        
+        .progress-track { width: 150px; height: 10px; background: rgba(0,0,0,0.6); border-radius: 5px; overflow: hidden; margin-top: 4px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.8); position: relative; }
+        .progress-fill { height: 100%; border-radius: 5px; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
+        .progress-fill::after { content:''; position:absolute; inset:0; background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 100%); }
+        
+        .fill-hp { background: linear-gradient(90deg, #f43f5e, #fb7185); box-shadow: 0 0 12px #f43f5e; }
+        .fill-shield { background: linear-gradient(90deg, #38bdf8, #7dd3fc); box-shadow: 0 0 12px #38bdf8; }
+        .fill-xp { background: linear-gradient(90deg, #a855f7, #d8b4fe); box-shadow: 0 0 12px #a855f7; }
+        .fill-boss { background: linear-gradient(90deg, #f59e0b, #fde047); box-shadow: 0 0 15px #f59e0b; }
 
-    .card{
-      border-radius:var(--radius);
-      border:1px solid var(--tg-border);
-      background:rgba(15,23,42,.92);
-      padding:12px;
-      box-shadow:0 10px 30px rgba(0,0,0,.45);
-    }
-    .title{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:8px;
-      font-size:11px;
-      letter-spacing:.8px;
-      text-transform:uppercase;
-      color:var(--tg-hint);
-    }
+        .boss-panel { position: absolute; top: 100px; left: 50%; transform: translateX(-50%) translateY(-20px); width: 85%; max-width: 500px; text-align: center; opacity: 0; transition: all 0.6s var(--spring-easing); pointer-events: none; }
+        .boss-panel.active { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    label{
-      display:block;
-      margin-bottom:4px;
-      font-size:11px;
-      color:var(--tg-hint);
-      text-transform:uppercase;
-      letter-spacing:.7px;
-    }
+        .floating-actions { position: absolute; bottom: max(20px, var(--safe-bottom)); right: 20px; display: flex; flex-direction: column; gap: 16px; pointer-events: auto; }
+        .fab { width: 64px; height: 64px; border-radius: 32px; font-size: 28px; box-shadow: 0 12px 30px rgba(0,0,0,0.5); padding: 0; }
+        .fab.pulse { animation: fabPulse 2s infinite; }
 
-    textarea,input,select{
-      width:100%;
-      border-radius:var(--radius-sm);
-      border:1px solid rgba(148,163,184,.4);
-      background:#020617;
-      color:var(--tg-text);
-      padding:10px 10px;
-      font-size:13px;
-      font-family:var(--mono);
-      outline:none;
-      transition:border-color var(--anim) var(--ease),box-shadow var(--anim) var(--ease),transform var(--anim) var(--ease);
-    }
-    textarea{min-height:110px;resize:vertical;}
-    textarea:focus,input:focus,select:focus{
-      border-color:var(--tg-accent);
-      box-shadow:0 0 0 3px rgba(34,211,166,.18);
-      transform:translateY(-1px);
-    }
+        @keyframes fabPulse { 0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(56, 189, 248, 0); } 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); } }
 
-    .row{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:8px;
-    }
-    @media (max-width:520px){
-      .row{grid-template-columns:1fr;}
-    }
+        /* Всплывающие уведомления */
+        #toast-container { position: absolute; top: max(100px, var(--safe-top)); left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 50; pointer-events: none; }
+        .toast { padding: 12px 24px; border-radius: 16px; font-weight: 600; font-size: 14px; animation: toastAnim 3s forwards var(--fast-spring); }
+        @keyframes toastAnim { 0% { opacity:0; transform: translateY(-20px) scale(0.9); } 10% { opacity:1; transform: translateY(0) scale(1); } 90% { opacity:1; transform: translateY(0) scale(1); } 100% { opacity:0; transform: translateY(-30px) scale(0.8); } }
 
-    .switch{
-      display:flex;
-      align-items:center;
-      gap:6px;
-      font-size:11px;
-      color:var(--tg-hint);
-      margin-top:4px;
-    }
-    .switch input{width:16px;height:16px;accent-color:var(--tg-accent);}
+        /* ==========================================================================
+           5. СИСТЕМА ОКОН И МОДАЛОК (МЕНЮ / МАГАЗИН / ЧИТЫ)
+           ========================================================================== */
+        /* Обертка для изоляции тач-эвентов */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 100;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: all 0.4s ease;
+            pointer-events: auto;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
 
-    .btns{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:8px;
-    }
-    .btn{
-      flex:1;
-      border:0;
-      border-radius:999px;
-      padding:9px 10px;
-      font-size:11px;
-      text-transform:uppercase;
-      letter-spacing:.7px;
-      font-weight:700;
-      cursor:pointer;
-      background:var(--tg-accent);
-      color:#020617;
-      box-shadow:0 8px 22px rgba(34,211,166,.25);
-      position:relative;
-      overflow:hidden;
-      transition:transform var(--anim) var(--ease),filter var(--anim) var(--ease);
-      min-width:120px;
-    }
-    .btn.secondary{
-      background:#020617;
-      color:var(--tg-text);
-      border:1px solid rgba(148,163,184,.5);
-      box-shadow:none;
-    }
-    .btn:active{transform:translateY(0) scale(.97);}
-    .btn:hover{transform:translateY(-1px);filter:saturate(1.05);}
-    .ripple{
-      position:absolute;
-      border-radius:999px;
-      background:rgba(255,255,255,.35);
-      transform:scale(0);
-      animation:ripple 480ms var(--ease);
-      pointer-events:none;
-      mix-blend-mode:overlay;
-    }
+        .modal-window {
+            width: 94%; max-width: 500px; max-height: 85vh;
+            display: flex; flex-direction: column;
+            transform: scale(0.8) translateY(40px);
+            opacity: 0; transition: all 0.5s var(--spring-easing);
+            border-radius: 32px; overflow: hidden;
+        }
+        .modal-overlay.active .modal-window { transform: scale(1) translateY(0); opacity: 1; }
 
-    .out{
-      border-radius:var(--radius-sm);
-      border:1px solid rgba(148,163,184,.5);
-      background:#020617;
-      padding:10px;
-      font-family:var(--mono);
-      font-size:12px;
-      min-height:90px;
-      word-break:break-all;
-      overflow:auto;
-      position:relative;
-    }
-    .out.loading::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:linear-gradient(90deg,transparent,rgba(248,250,252,.08),transparent);
-      transform:translateX(-100%);
-      animation:shimmer 900ms linear infinite;
-      pointer-events:none;
-    }
+        .modal-header {
+            padding: 24px; border-bottom: 1px solid var(--glass-border);
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.03); z-index: 2;
+        }
+        .modal-title { font-size: 22px; font-weight: 800; background: linear-gradient(90deg, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        /* КРИТИЧНО ДЛЯ IOS: Плавный скролл и изоляция */
+        .modal-body {
+            padding: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch; /* Идеальный скролл на айфонах */
+            overscroll-behavior: contain; /* Отключает эффект "резинки" всей страницы */
+            flex-grow: 1; position: relative;
+        }
+        
+        /* Стилизация скроллбара (для ПК и Android) */
+        .modal-body::-webkit-scrollbar { width: 6px; }
+        .modal-body::-webkit-scrollbar-track { background: transparent; }
+        .modal-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
 
-    .meta{
-      font-size:11px;
-      color:var(--tg-hint);
-    }
+        .modal-content-pad { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
 
-    .toast-wrap{
-      position:fixed;
-      left:0;right:0;
-      bottom:calc(var(--safe-bottom)+10px);
-      display:flex;
-      justify-content:center;
-      pointer-events:none;
-      padding:0 12px;
-      z-index:40;
-    }
-    .toast{
-      pointer-events:auto;
-      max-width:900px;
-      width:100%;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,.5);
-      background:rgba(15,23,42,.95);
-      padding:8px 12px;
-      font-size:11px;
-      display:flex;
-      align-items:center;
-      gap:6px;
-      opacity:0;
-      transform:translateY(10px);
-      transition:opacity var(--anim) var(--ease),transform var(--anim) var(--ease);
-    }
-    .toast.show{opacity:1;transform:translateY(0);}
-    .pill{
-      width:8px;height:8px;border-radius:999px;
-      background:var(--tg-accent);
-    }
-    .pill.err{background:#f97373;}
-    .pill.warn{background:#eab308;}
+        /* Вкладки навигации внутри меню */
+        .tabs-wrapper { padding: 16px 24px 0; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .tabs-scroll { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding-bottom: 16px; -webkit-overflow-scrolling: touch; }
+        .tabs-scroll::-webkit-scrollbar { display: none; }
+        .tab-btn { padding: 10px 20px; border-radius: 20px; font-size: 14px; white-space: nowrap; opacity: 0.5; transition: 0.3s; font-weight: 600; border: 1px solid transparent; }
+        .tab-btn.active { opacity: 1; background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); box-shadow: inset 0 2px 4px rgba(255,255,255,0.1); }
+        .tab-pane { display: none; animation: paneFade 0.4s var(--fast-spring); }
+        .tab-pane.active { display: flex; flex-direction: column; gap: 12px; }
+        @keyframes paneFade { from{ opacity:0; transform:translateX(20px); } to{ opacity:1; transform:translateX(0); } }
 
-    .footer{
-      text-align:center;
-      font-size:10px;
-      color:var(--tg-hint);
-      margin-top:4px;
-      opacity:.7;
-    }
+        /* Элементы списка (магазин, читы) */
+        .list-card {
+            background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 20px; padding: 16px; display: flex; justify-content: space-between; align-items: center; gap: 15px;
+            transition: all 0.3s ease; position: relative; overflow: hidden;
+        }
+        .list-card:hover { background: rgba(30, 41, 59, 0.6); border-color: rgba(255,255,255,0.15); }
+        .list-info { flex-grow: 1; }
+        .list-info h4 { font-size: 16px; margin-bottom: 4px; color: #fff; display: flex; align-items: center; gap: 8px;}
+        .list-info p { font-size: 13px; color: var(--color-sub); line-height: 1.4; }
+        .level-badge { background: var(--accent-main); color: #000; font-size: 10px; padding: 2px 6px; border-radius: 8px; font-weight: 800; }
 
-    @keyframes fadeUp{
-      from{opacity:0;transform:translateY(6px);}
-      to{opacity:1;transform:translateY(0);}
-    }
-    @keyframes pulse{
-      0%,100%{opacity:1;transform:scale(1);}
-      50%{opacity:.55;transform:scale(.94);}
-    }
-    @keyframes ripple{
-      to{transform:scale(16);opacity:0;}
-    }
-    @keyframes shimmer{
-      to{transform:translateX(100%);}
-    }
-  </style>
+        /* iOS-style Toggle Switch */
+        .ios-toggle {
+            width: 54px; height: 32px; background: rgba(255,255,255,0.1); border-radius: 16px;
+            position: relative; cursor: pointer; transition: background 0.4s ease; flex-shrink: 0;
+            border: 2px solid rgba(255,255,255,0.05);
+        }
+        .ios-toggle::after {
+            content: ''; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px;
+            background: #fff; border-radius: 50%; transition: transform 0.5s var(--spring-easing);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+        }
+        .ios-toggle.on { background: var(--color-success); border-color: var(--color-success); box-shadow: 0 0 15px rgba(16, 185, 129, 0.5); }
+        .ios-toggle.on::after { transform: translateX(22px); }
+
+        /* ==========================================================================
+           6. ГЛОБАЛЬНЫЕ ЭКРАНЫ (СТАРТ / ГЕЙМОВЕР / ПАУЗА)
+           ========================================================================== */
+        .fullscreen-state {
+            position: fixed; inset: 0; z-index: 200;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: radial-gradient(circle at center, rgba(15,23,42,0.9), #020617);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            transition: opacity 0.5s ease;
+        }
+        .state-hidden { opacity: 0; pointer-events: none; visibility: hidden; }
+        
+        .huge-title { font-size: clamp(40px, 10vw, 70px); font-weight: 900; letter-spacing: 5px; text-align: center; margin-bottom: 10px; background: linear-gradient(180deg, #fff, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; filter: drop-shadow(0 10px 20px rgba(56,189,248,0.3)); }
+        .huge-subtitle { font-size: 16px; color: var(--color-sub); margin-bottom: 40px; text-align: center; max-width: 80%; line-height: 1.5; }
+        
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 40px; width: 90%; max-width: 400px; }
+        .stat-box { padding: 20px; border-radius: 24px; text-align: center; }
+
+        /* Разное */
+        .currency-display { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 18px; color: #fbbf24; background: rgba(0,0,0,0.3); padding: 8px 16px; border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.3); box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); }
+    </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="topbar">
-    <span><span class="dot"></span>ШИФРОТЕКС</span>
-    <span id="runtime">Готово</span>
-  </div>
 
-  <div class="tabs" id="tabs">
-    <button class="tab active" data-tab="msg">Сообщение</button>
-    <button class="tab" data-tab="enc">Шифр</button>
-    <button class="tab" data-tab="dec">Дешифр</button>
-    <button class="tab" data-tab="log">Журнал</button>
-  </div>
-
-  <!-- Вкладка: Сообщение (авто-расшифровка пароля и текста) -->
-  <section class="section active" id="sec-msg">
-    <div class="grid">
-      <div class="card">
-        <div class="title">
-          <span>Вход</span>
-        </div>
-        <label for="bundleIn">Сообщение</label>
-        <textarea id="bundleIn" placeholder="Вставьте сообщение с двумя строками:
-пароль: ...
-текст: ..."></textarea>
-        <label for="masterPass">Мастер-пароль</label>
-        <input id="masterPass" type="password" placeholder="Пароль, которым шифровали пароль" />
-        <div class="switch">
-          <input id="showMaster" type="checkbox">
-          <span>Показать</span>
-        </div>
-        <div class="btns">
-          <button class="btn" id="btnBundle">Расшифровать</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="title">
-          <span>Результат</span>
-        </div>
-        <label>Открытый текст</label>
-        <div class="out" id="bundleOut"></div>
-      </div>
+    <!-- Рендер Слой -->
+    <div id="game-container">
+        <canvas id="bg-canvas"></canvas>
+        <canvas id="main-canvas"></canvas>
+        <canvas id="fx-canvas"></canvas>
     </div>
-  </section>
 
-  <!-- Вкладка: обычное шифрование -->
-  <section class="section" id="sec-enc">
-    <div class="grid">
-      <div class="card">
-        <div class="title"><span>Вход</span></div>
-        <label for="pt">Текст</label>
-        <textarea id="pt" placeholder="Введите текст..."></textarea>
-        <div class="row">
-          <div>
-            <label for="encAlgo">Алгоритм</label>
-            <select id="encAlgo">
-              <option value="aes256">AES-256-GCM</option>
-              <option value="aes192">AES-192-GCM</option>
-              <option value="aes128">AES-128-GCM</option>
-            </select>
-          </div>
-          <div>
-            <label for="encPass">Пароль</label>
-            <input id="encPass" type="password" placeholder="Пароль" />
-          </div>
+    <!-- Игровой Интерфейс (HUD) -->
+    <div id="hud">
+        <div class="hud-top">
+            <div class="liquid-glass hud-card" style="width: 220px;">
+                <div style="display:flex; justify-content: space-between;">
+                    <span class="hud-label">Броня корпуса</span>
+                    <span class="hud-label" id="ui-hp-text">100%</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill fill-hp" id="ui-hp-bar" style="width: 100%"></div></div>
+                
+                <div style="display:flex; justify-content: space-between; margin-top: 10px;">
+                    <span class="hud-label" style="color: #38bdf8;">Энерго-Щит</span>
+                    <span class="hud-label" id="ui-shield-text">0%</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill fill-shield" id="ui-shield-bar" style="width: 0%"></div></div>
+
+                <div style="display:flex; justify-content: space-between; margin-top: 10px;">
+                    <span class="hud-label" style="color: #a855f7;">Опыт (Ур. <span id="ui-lvl">1</span>)</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill fill-xp" id="ui-xp-bar" style="width: 0%"></div></div>
+            </div>
+
+            <div class="liquid-glass hud-card" style="align-items: flex-end; min-width: 130px;">
+                <span class="hud-label" id="ui-wave">Сектор 1</span>
+                <span class="hud-value" id="ui-score">0</span>
+                <span class="hud-label" style="color:var(--color-warning); display:none; margin-top:5px;" id="ui-combo">Комбо x2</span>
+            </div>
         </div>
-        <div class="switch">
-          <input id="showEnc" type="checkbox"><span>Показать</span>
+
+        <div id="boss-hud" class="liquid-glass hud-card boss-panel">
+            <span class="hud-label" style="color: #f59e0b; font-size: 12px;" id="boss-name">ВНИМАНИЕ: АНОМАЛИЯ</span>
+            <div class="progress-track" style="width: 100%; height: 14px; margin-top: 8px;">
+                <div class="progress-fill fill-boss" id="boss-hp-bar" style="width: 100%"></div>
+            </div>
         </div>
-        <div class="btns">
-          <button class="btn" id="btnGenPass">Пароль</button>
-          <button class="btn secondary" id="btnCopyPass">Копия</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="title">
-          <span>Шифр</span>
-          <span class="meta" id="encMeta">0</span>
-        </div>
-        <div class="out" id="ctOut"></div>
-        <div class="btns">
-          <button class="btn" id="btnEncrypt">Шифровать</button>
-          <button class="btn secondary" id="btnCopyCT">Копия</button>
-          <button class="btn secondary" id="btnSaveCT">Файл</button>
-        </div>
-      </div>
     </div>
-  </section>
 
-  <!-- Вкладка: обычное дешифрование -->
-  <section class="section" id="sec-dec">
-    <div class="grid">
-      <div class="card">
-        <div class="title"><span>Вход</span></div>
-        <label for="ct">Шифр</label>
-        <textarea id="ct" placeholder="Вставьте Base64..."></textarea>
-        <label for="decPass">Пароль</label>
-        <input id="decPass" type="password" placeholder="Пароль" />
-        <div class="switch">
-          <input id="showDec" type="checkbox"><span>Показать</span>
-        </div>
-        <div class="btns">
-          <button class="btn" id="btnDecrypt">Дешифровать</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="title">
-          <span>Текст</span>
-          <span class="meta" id="decMeta">0</span>
-        </div>
-        <div class="out" id="ptOut"></div>
-        <div class="btns">
-          <button class="btn secondary" id="btnCopyPT">Копия</button>
-          <button class="btn secondary" id="btnSavePT">Файл</button>
-        </div>
-      </div>
+    <!-- Уведомления -->
+    <div id="toast-container"></div>
+
+    <!-- Плавающие кнопки (FAB) -->
+    <div class="floating-actions">
+        <button class="glass-btn primary fab pulse" id="btn-shop">🚀</button>
+        <button class="glass-btn fab" id="btn-cheats" style="font-size: 20px;">⚙️</button>
     </div>
-  </section>
 
-  <!-- Вкладка: журнал -->
-  <section class="section" id="sec-log">
-    <div class="card">
-      <div class="title">
-        <span>Журнал</span>
-        <span class="meta" id="logMeta">0</span>
-      </div>
-      <div class="out" id="logOut" style="min-height:200px;"></div>
-      <div class="btns">
-        <button class="btn secondary" id="btnExportLog">Экспорт</button>
-        <button class="btn secondary" id="btnClearLog">Очистить</button>
-      </div>
+    <!-- ========================================================== -->
+    <!-- МОДАЛЬНОЕ ОКНО: ОРБИТАЛЬНЫЙ МАГАЗИН -->
+    <!-- ========================================================== -->
+    <div class="modal-overlay" id="modal-shop">
+        <div class="liquid-glass modal-window">
+            <div class="modal-header">
+                <div class="modal-title">Орбитальная Верфь</div>
+                <div class="currency-display"><span id="shop-coins-display">0</span> 💎</div>
+            </div>
+            
+            <div class="tabs-wrapper">
+                <div class="tabs-scroll">
+                    <div class="tab-btn active" data-target="shop-weapons">Вооружение</div>
+                    <div class="tab-btn" data-target="shop-defense">Защита</div>
+                    <div class="tab-btn" data-target="shop-tech">Технологии</div>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <div class="modal-content-pad">
+                    <!-- Сюда динамически инжектятся карточки товаров через JS -->
+                    <div id="shop-weapons" class="tab-pane active"></div>
+                    <div id="shop-defense" class="tab-pane"></div>
+                    <div id="shop-tech" class="tab-pane"></div>
+                </div>
+            </div>
+            
+            <div style="padding: 16px 24px; border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.3);">
+                <button class="glass-btn primary" style="width: 100%; font-size: 16px;" onclick="UI.closeModal('modal-shop')">ВЕРНУТЬСЯ В БОЙ</button>
+            </div>
+        </div>
     </div>
-  </section>
 
-  <div class="footer">Локальное шифрование AES‑GCM. Данные не покидают браузер.</div>
-</div>
+    <!-- ========================================================== -->
+    <!-- МОДАЛЬНОЕ ОКНО: ПАНЕЛЬ РАЗРАБОТЧИКА (ЧИТЫ) -->
+    <!-- ========================================================== -->
+    <div class="modal-overlay" id="modal-cheats">
+        <div class="liquid-glass modal-window">
+            <div class="modal-header">
+                <div class="modal-title" style="background: linear-gradient(90deg, #ef4444, #f59e0b); -webkit-background-clip: text;">Overdrive Console</div>
+                <button class="glass-btn" style="width:40px; height:40px; padding:0; border-radius:50%;" onclick="UI.closeModal('modal-cheats')">✕</button>
+            </div>
 
-<div class="toast-wrap">
-  <div class="toast" id="toast">
-    <div class="pill" id="toastPill"></div>
-    <div id="toastText"></div>
-  </div>
-</div>
+            <div class="tabs-wrapper">
+                <div class="tabs-scroll">
+                    <div class="tab-btn active" data-target="cheat-combat">Бой</div>
+                    <div class="tab-btn" data-target="cheat-world">Среда</div>
+                    <div class="tab-btn" data-target="cheat-visual">Визуал</div>
+                    <div class="tab-btn" data-target="cheat-action">Действия</div>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <div class="modal-content-pad">
+                    <!-- Вкладка: Бой -->
+                    <div id="cheat-combat" class="tab-pane active">
+                        <div class="list-card"><div class="list-info"><h4>Режим Бога</h4><p>Иммунитет к урону</p></div><div class="ios-toggle" data-cheat="godmode"></div></div>
+                        <div class="list-card"><div class="list-info"><h4>Нейро-Аимбот</h4><p>Пули сами находят цель</p></div><div class="ios-toggle" data-cheat="aimbot"></div></div>
+                        <div class="list-card"><div class="list-info"><h4>Орбитальный Лазер</h4><p>Непрерывный луч смерти</p></div><div class="ios-toggle" data-cheat="laser"></div></div>
+                        <div class="list-card"><div class="list-info"><h4>Пробитие (Pierce)</h4><p>Снаряды летят насквозь</p></div><div class="ios-toggle" data-cheat="pierce"></div></div>
+                        <div class="list-card"><div class="list-info"><h4>Разрывные снаряды</h4><p>Массовый урон при попадании</p></div><div class="ios-toggle" data-cheat="explosive"></div></div>
+                        <div class="list-card"><div class="list-info"><h4>Цепная молния</h4><p>Тесла-урон по цепной реакции</p></div><div class="ios-toggle" data-cheat="chain"></div></div>
+                        <div class="list-card"><div class="list-info"><h4>Вампиризм</h4><p>Восстановление брони за фраги</p></div><div class="ios-toggle" data-cheat="lifesteal"></div></div>
+                        <div class="list-card"><div class="list-info"><h4>Смертельный выстрел</h4><p>Ваншот любого врага</p></div><div class="ios-toggle" data-cheat="oneshot"></div></div>
+                        <div class="list-card"><div class="list-info"><h4>Мульти-ствол (x10)</h4><p>Абсурдное количество пуль</p></div><div class="ios-toggle" data-cheat="multishotMax"></div></div>
+                    </div>
+
+                    <!-- Вкладка: Среда -->
+                    <div id="cheat-world" class="tab-pane">
+                        <div class="list-card"><div class="list-info"><h4>Замедление времени</h4><p>Мир движется в 4 раза медленнее</p></div><div class="ios-toggle" data-cheat="slowmo"></div></div>
+                        <div class="list-card"><div class="list-info"><h4>Стазис врагов</h4><p>Полная парализация целей</p></div><div class="ios-toggle" data-cheat="freeze"></div></div>
+                        <div class="list-card"><div class="list-info"><h4>Безумный спавн</h4><p>Орды без остановки</p></div><div class="ios-toggle" data-cheat="fastspawn"></div></div>
+                        <div class="list-card"><div class="list-info"><h4>x100 Множитель Очков</h4><p>Ломаем таблицу рекордов</p></div><div class="ios-toggle" data-cheat="megascore"></div></div>
+                        <div class="list-card"><div class="list-info"><h4>Бесконечное комбо</h4><p>Счетчик не сбрасывается</p></div><div class="ios-toggle" data-cheat="infcombo"></div></div>
+                    </div>
+
+                    <!-- Вкладка: Визуал -->
+                    <div id="cheat-visual" class="tab-pane">
+                        <div class="list-card"><div class="list-info"><h4>Протокол Матрицы</h4><p>Цифровой зеленый фильтр</p></div><div class="ios-toggle" data-cheat="matrix"></div></div>
+                        <div class="list-card"><div class="list-info"><h4>Кибер-Дискотека</h4><p>Смена цветов HSL</p></div><div class="ios-toggle" data-cheat="rainbow"></div></div>
+                        <div class="list-card"><div class="list-info"><h4>Ретро 8-Bit</h4><p>Отключение сглаживания</p></div><div class="ios-toggle" data-cheat="retro"></div></div>
+                    </div>
+
+                    <!-- Вкладка: Действия -->
+                    <div id="cheat-action" class="tab-pane">
+                        <div class="list-card"><div class="list-info"><h4>Экстерминатус</h4><p>Убить всех на экране</p></div><button class="glass-btn danger" onclick="Engine.nukeScreen()">ОЧИСТИТЬ</button></div>
+                        <div class="list-card"><div class="list-info"><h4>+1000 Алмазов</h4><p>Добавить валюту</p></div><button class="glass-btn primary" onclick="Player.addCoins(1000)">ДОБАВИТЬ</button></div>
+                        <div class="list-card"><div class="list-info"><h4>+1 Уровень</h4><p>Повысить уровень корабля</p></div><button class="glass-btn primary" onclick="Player.addXp(Player.stats.xpNeeded)">UP</button></div>
+                        <div class="list-card"><div class="list-info"><h4>Вызов Босса</h4><p>Спровоцировать аномалию</p></div><button class="glass-btn warning" onclick="WaveSys.forceBoss()">ВЫЗВАТЬ</button></div>
+                        <div class="list-card"><div class="list-info"><h4>Полное исцеление</h4><p>Восстановить Корпус и Щит</p></div><button class="glass-btn success" style="background:#10b981;" onclick="Player.heal(9999); Player.addShield(9999);">ЛЕЧИТЬ</button></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- ГЛОБАЛЬНЫЕ ЭКРАНЫ -->
+    <!-- ========================================================== -->
+    
+    <!-- Экран Старта -->
+    <div class="fullscreen-state" id="screen-start">
+        <h1 class="huge-title">COSMIC<br>DEFENDER</h1>
+        <p class="huge-subtitle">Защитите орбитальное кольцо от вторжения.<br>Используйте палец для перемещения корабля. Огонь ведется автоматически.</p>
+        <button class="glass-btn primary" style="font-size: 20px; padding: 18px 48px; border-radius: 40px;" onclick="Engine.startRun()">ИНИЦИАЛИЗАЦИЯ</button>
+    </div>
+
+    <!-- Экран Смерти -->
+    <div class="fullscreen-state state-hidden" id="screen-gameover">
+        <h1 class="huge-title" style="background: linear-gradient(180deg, #fff, #ef4444); -webkit-background-clip: text;">СВЯЗЬ<br>ПОТЕРЯНА</h1>
+        <div class="stats-grid">
+            <div class="liquid-glass stat-box">
+                <div class="hud-label">Итоговый счет</div>
+                <div class="hud-value" style="color:var(--accent-main);" id="go-score">0</div>
+            </div>
+            <div class="liquid-glass stat-box">
+                <div class="hud-label">Сектор</div>
+                <div class="hud-value" style="color:var(--color-success);" id="go-wave">1</div>
+            </div>
+            <div class="liquid-glass stat-box">
+                <div class="hud-label">Уровень</div>
+                <div class="hud-value" style="color:var(--color-epic);" id="go-lvl">1</div>
+            </div>
+            <div class="liquid-glass stat-box">
+                <div class="hud-label">Собрано 💎</div>
+                <div class="hud-value" style="color:var(--color-warning);" id="go-coins">0</div>
+            </div>
+        </div>
+        <button class="glass-btn primary" style="font-size: 18px; padding: 16px 40px; border-radius: 30px;" onclick="Engine.startRun()">ПЕРЕЗАПУСТИТЬ СИМУЛЯЦИЮ</button>
+    </div>
 
 <script>
-(() => {
-  const tg = window.Telegram?.WebApp;
-  if (tg) {
-    try{tg.ready();tg.expand();}catch(e){}
-  }
+/**
+ * ============================================================================
+ * COSMIC DEFENDER ULTIMATE ENGINE
+ * Версия: 3.0 (Liquid Glass, Архитектура ECS-lite, Физика частиц)
+ * ============================================================================
+ */
 
-  const $ = id => document.getElementById(id);
+// --- Глобальные константы и математика ---
+const CONFIG = {
+    FPS: 60,
+    BASE_WIDTH: 800, // Референсная ширина для скалирования
+    MAX_PARTICLES: 300,
+    BOSS_SPAWN_WAVE: 5
+};
 
-  const runtime = $('runtime');
-  const toastEl = $('toast'), toastPill = $('toastPill'), toastText = $('toastText');
-  let toastTimer = null;
-  function toast(kind,text){
-    toastText.textContent = text;
-    toastPill.className = 'pill' + (kind==='error'?' err':kind==='warn'?' warn':'');
-    toastEl.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(()=>toastEl.classList.remove('show'),2000);
-  }
+let W, H, SCALE;
+const RAND = (min, max) => Math.random() * (max - min) + min;
+const RAND_INT = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const DIST = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1);
+const LERP = (start, end, amt) => (1 - amt) * start + amt * end;
+const CLAMP = (val, min, max) => Math.min(Math.max(val, min), max);
 
-  function ripple(e){
-    const btn = e.currentTarget;
-    const rect = btn.getBoundingClientRect();
-    const x = (e.clientX ?? rect.left+rect.width/2) - rect.left;
-    const y = (e.clientY ?? rect.top+rect.height/2) - rect.top;
-    const s = document.createElement('span');
-    s.className='ripple';
-    s.style.left=x+'px';
-    s.style.top=y+'px';
-    s.style.width='12px';
-    s.style.height='12px';
-    btn.appendChild(s);
-    setTimeout(()=>s.remove(),500);
-  }
-  document.querySelectorAll('button').forEach(b=>b.addEventListener('pointerdown',ripple,{passive:true}));
+// --- Холсты ---
+const canvasBg = document.getElementById('bg-canvas');
+const ctxBg = canvasBg.getContext('2d', { alpha: false });
+const canvasMain = document.getElementById('main-canvas');
+const ctxMain = canvasMain.getContext('2d');
+const canvasFx = document.getElementById('fx-canvas');
+const ctxFx = canvasFx.getContext('2d');
 
-  const log = [];
-  function addLog(op,status,info=''){
-    log.push({t:new Date().toLocaleString('ru-RU'),op,status,info});
-    if(log.length>300)log.shift();
-    renderLog();
-  }
-  function renderLog(){
-    $('logMeta').textContent=log.length;
-    $('logOut').textContent=log.slice().reverse().map(x=>`[${x.t}] ${x.op} [${x.status}]${x.info?' — '+x.info:''}`).join('\n')||'Пусто';
-  }
+// --- Состояние Игры ---
+const State = {
+    isRunning: false,
+    isPaused: false,
+    time: 0,
+    lastTime: 0,
+    dt: 0, // Delta Time
+    score: 0,
+    combo: 0,
+    comboTimer: 0,
+    cameraShake: 0
+};
 
-  function setLoading(el,on){
-    el.classList.toggle('loading',!!on);
-  }
+// --- Менеджер Читов ---
+const Cheats = {
+    godmode: false, aimbot: false, laser: false, pierce: false, explosive: false,
+    chain: false, lifesteal: false, oneshot: false, multishotMax: false,
+    slowmo: false, freeze: false, fastspawn: false, megascore: false, infcombo: false,
+    matrix: false, rainbow: false, retro: false,
+    _rainbowHue: 0
+};
 
-  function u8ToB64(u8){
-    let s='';for(let i=0;i<u8.length;i++)s+=String.fromCharCode(u8[i]);return btoa(s);
-  }
-  function b64ToU8(b64){
-    const bin=atob(b64.trim());const u8=new Uint8Array(bin.length);
-    for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
-    return u8;
-  }
-  async function sha256Bytes(str){
-    const enc=new TextEncoder().encode(str);
-    const h=await crypto.subtle.digest('SHA-256',enc);
-    return new Uint8Array(h);
-  }
-  async function deriveKeyBytes(pass,algo){
-    const h=await sha256Bytes(pass);
-    const len=algo==='aes256'?32:algo==='aes192'?24:16;
-    return h.slice(0,len);
-  }
-
-  async function copyText(text){
-    if(!text){toast('warn','Пусто');return;}
-    try{await navigator.clipboard.writeText(text);toast('ok','Скопировано');}
-    catch(e){toast('error','Нет доступа к буферу');}
-  }
-  function saveText(text,name){
-    if(!text){toast('warn','Пусто');return;}
-    const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
-    toast('ok','Файл сохранён');
-  }
-
-  // Tabs
-  const tabs=document.querySelectorAll('.tab');
-  const sections={
-    msg:$('sec-msg'),
-    enc:$('sec-enc'),
-    dec:$('sec-dec'),
-    log:$('sec-log')
-  };
-  tabs.forEach(b=>b.addEventListener('click',()=>{
-    const t=b.dataset.tab;
-    tabs.forEach(x=>x.classList.toggle('active',x===b));
-    Object.entries(sections).forEach(([k,el])=>el.classList.toggle('active',k===t));
-    addLog('TAB','OK',t);
-  }));
-
-  // Show/hide
-  $('showEnc').addEventListener('change',e=>$('encPass').type=e.target.checked?'text':'password');
-  $('showDec').addEventListener('change',e=>$('decPass').type=e.target.checked?'text':'password');
-  $('showMaster').addEventListener('change',e=>$('masterPass').type=e.target.checked?'text':'password');
-
-  // Password/keys
-  function genPassword(len=32){
-    const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=';
-    const rnd=new Uint32Array(len);crypto.getRandomValues(rnd);
-    let p='';for(let i=0;i<len;i++)p+=chars[rnd[i]%chars.length];
-    return p;
-  }
-  $('btnGenPass').addEventListener('click',()=>{
-    $('encPass').value=genPassword(32);
-    toast('ok','Пароль');
-    addLog('PWD','OK','32');
-  });
-  $('btnCopyPass').addEventListener('click',()=>copyText($('encPass').value));
-
-  // Encrypt
-  $('btnEncrypt').addEventListener('click',async()=>{
-    const pt=$('pt').value;
-    const pass=$('encPass').value;
-    const algo=$('encAlgo').value;
-    if(!pt.trim()){toast('warn','Нет текста');return;}
-    if(!pass||pass.length<8){toast('warn','Пароль < 8');return;}
-
-    const out=$('ctOut');
-    setLoading(out,true);runtime.textContent='Шифрование...';
-    try{
-      const keyBytes=await deriveKeyBytes(pass,algo);
-      const iv=crypto.getRandomValues(new Uint8Array(12));
-      const key=await crypto.subtle.importKey('raw',keyBytes,'AES-GCM',false,['encrypt']);
-      const data=new TextEncoder().encode(pt);
-      const enc=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,data);
-      const encU8=new Uint8Array(enc);
-      const combined=new Uint8Array(iv.length+encU8.length);
-      combined.set(iv,0);combined.set(encU8,iv.length);
-      const b64=u8ToB64(combined);
-      out.textContent=b64;
-      $('encMeta').textContent=b64.length;
-      toast('ok','Готово');
-      addLog('ENC','OK',algo);
-    }catch(e){
-      out.textContent='';
-      toast('error','Ошибка шифрования');
-      addLog('ENC','ERR',e.message||'err');
-    }finally{
-      setLoading(out,false);runtime.textContent='Готово';
+// --- Хранилище сущностей ---
+const Entities = {
+    playerBullets: [],
+    enemyBullets: [],
+    enemies: [],
+    particles: [],
+    drops: [],
+    texts: [],
+    bgStars: [],
+    nebulae: [],
+    
+    clearAll() {
+        this.playerBullets = []; this.enemyBullets = []; this.enemies = [];
+        this.particles = []; this.drops = []; this.texts = [];
     }
-  });
-  $('btnCopyCT').addEventListener('click',()=>copyText($('ctOut').textContent.trim()));
-  $('btnSaveCT').addEventListener('click',()=>saveText($('ctOut').textContent.trim(),'encrypted.txt'));
+};
 
-  // Decrypt
-  $('btnDecrypt').addEventListener('click',async()=>{
-    const b64=$('ct').value.trim();
-    const pass=$('decPass').value;
-    const out=$('ptOut');
-    if(!b64){toast('warn','Нет данных');return;}
-    if(!pass){toast('warn','Нет пароля');return;}
+/**
+ * ============================================================================
+ * ПОДСИСТЕМА АУДИО (WEB AUDIO API SYNTHESIZER)
+ * Генерируем звуки на лету (без внешних файлов)
+ * ============================================================================
+ */
+const AudioSys = {
+    ctx: null,
+    master: null,
+    muted: false, // Отключено по умолчанию до первого взаимодействия
 
-    setLoading(out,true);runtime.textContent='Дешифрование...';
-    try{
-      const combined=b64ToU8(b64);
-      if(combined.length<13)throw new Error('short');
-      const iv=combined.slice(0,12);
-      const enc=combined.slice(12);
-      const algos=['aes256','aes192','aes128'];
-      let ok=false;
-      for(const algo of algos){
-        try{
-          const keyBytes=await deriveKeyBytes(pass,algo);
-          const key=await crypto.subtle.importKey('raw',keyBytes,'AES-GCM',false,['decrypt']);
-          const buf=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,enc);
-          const txt=new TextDecoder().decode(buf);
-          out.textContent=txt;
-          $('decMeta').textContent=txt.length;
-          ok=true;
-          addLog('DEC','OK',algo);
-          break;
-        }catch(_e){}
-      }
-      if(!ok)throw new Error('bad');
-      toast('ok','Готово');
-    }catch(e){
-      out.textContent='';
-      $('decMeta').textContent='0';
-      toast('error','Ошибка');
-      addLog('DEC','ERR',e.message||'err');
-    }finally{
-      setLoading(out,false);runtime.textContent='Готово';
+    init() {
+        if (this.ctx) return;
+        try {
+            window.AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+            this.master = this.ctx.createGain();
+            this.master.gain.value = 0.3; // Громкость
+            this.master.connect(this.ctx.destination);
+        } catch (e) { console.warn("Web Audio API не поддерживается."); }
+    },
+
+    resume() {
+        if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+    },
+
+    playTone(freq, type, duration, vol=1, slideFreq=null) {
+        if (!this.ctx || this.muted) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        if (slideFreq) {
+            osc.frequency.exponentialRampToValueAtTime(slideFreq, this.ctx.currentTime + duration);
+        }
+        gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(this.master);
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+    },
+
+    sfxShoot() { this.playTone(RAND(400,600), 'square', 0.1, 0.1, 200); },
+    sfxLaser() { this.playTone(150, 'sawtooth', 0.1, 0.05); }, // Непрерывный звук
+    sfxHit()   { this.playTone(100, 'triangle', 0.1, 0.2, 50); },
+    sfxExplode(){ this.playTone(80, 'square', 0.4, 0.4, 20); },
+    sfxCoin()  { this.playTone(1200, 'sine', 0.1, 0.3, 2000); setTimeout(()=>this.playTone(1800, 'sine', 0.2, 0.3, 2400), 100); },
+    sfxPowerup(){ this.playTone(400, 'sine', 0.3, 0.3, 800); },
+    sfxUI()    { this.playTone(800, 'sine', 0.05, 0.2); }
+};
+
+/**
+ * ============================================================================
+ * КЛАССЫ СУЩНОСТЕЙ (ИНКАПСУЛЯЦИЯ)
+ * ============================================================================
+ */
+
+// --- Всплывающий текст (Урон, Опыт, Инфо) ---
+class FloatingText {
+    constructor(x, y, text, color, size = 16, isCrit = false) {
+        this.x = x + RAND(-15*SCALE, 15*SCALE);
+        this.y = y;
+        this.text = text;
+        this.color = color;
+        this.size = size * (isCrit ? 1.5 : 1) * SCALE;
+        this.life = 1.0; // В секундах
+        this.maxLife = 1.0;
+        this.vy = -50 * SCALE;
+        this.vx = RAND(-20, 20) * SCALE;
+        this.isCrit = isCrit;
     }
-  });
-  $('btnCopyPT').addEventListener('click',()=>copyText($('ptOut').textContent.trim()));
-  $('btnSavePT').addEventListener('click',()=>saveText($('ptOut').textContent.trim(),'decrypted.txt'));
-
-  // Bundle tab: message -> decrypt password -> decrypt text
-  $('btnBundle').addEventListener('click',async()=>{
-    const msg=$('bundleIn').value.trim();
-    const master=$('masterPass').value;
-    const out=$('bundleOut');
-    if(!msg){toast('warn','Нет сообщения');return;}
-    if(!master){toast('warn','Нет пароля');return;}
-
-    // формат:
-    // пароль: <base64>
-    // текст: <base64>
-    const lines=msg.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-    let encPwd='',encTxt='';
-    for(const l of lines){
-      if(l.toLowerCase().startsWith('пароль:')) encPwd=l.split(':').slice(1).join(':').trim();
-      else if(l.toLowerCase().startsWith('текст:')) encTxt=l.split(':').slice(1).join(':').trim();
+    update(dt) {
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.vy += 150 * SCALE * dt; // Гравитация текста (эффект подпрыгивания)
+        this.life -= dt;
     }
-    if(!encPwd || !encTxt){toast('warn','Неверный формат');return;}
-
-    setLoading(out,true);runtime.textContent='Авто‑расшифровка...';
-    try{
-      const combinedPwd=b64ToU8(encPwd);
-      const ivPwd=combinedPwd.slice(0,12);
-      const encPwdData=combinedPwd.slice(12);
-      const keyBytes=await deriveKeyBytes(master,'aes256');
-      const key=await crypto.subtle.importKey('raw',keyBytes,'AES-GCM',false,['decrypt']);
-      const pwdBuf=await crypto.subtle.decrypt({name:'AES-GCM',iv:ivPwd},key,encPwdData);
-      const realPwd=new TextDecoder().decode(pwdBuf); // пароль для текста
-
-      const combinedTxt=b64ToU8(encTxt);
-      const ivTxt=combinedTxt.slice(0,12);
-      const encTxtData=combinedTxt.slice(12);
-      const key2=await crypto.subtle.importKey('raw',(await deriveKeyBytes(realPwd,'aes256')),'AES-GCM',false,['decrypt']);
-      const txtBuf=await crypto.subtle.decrypt({name:'AES-GCM',iv:ivTxt},key2,encTxtData);
-      const txt=new TextDecoder().decode(txtBuf);
-      out.textContent=txt;
-      addLog('BUNDLE','OK','пароль+текст');
-      toast('ok','Готово');
-    }catch(e){
-      out.textContent='';
-      toast('error','Ошибка сообщения');
-      addLog('BUNDLE','ERR',e.message||'err');
-    }finally{
-      setLoading(out,false);runtime.textContent='Готово';
+    draw(ctx) {
+        ctx.save();
+        const alpha = Math.max(0, this.life / this.maxLife);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = this.color;
+        ctx.font = `${this.isCrit ? '900 italic' : 'bold'} ${this.size}px "SF Pro Display", sans-serif`;
+        ctx.textAlign = 'center';
+        if (this.isCrit) {
+            ctx.shadowBlur = 10; ctx.shadowColor = this.color;
+        }
+        ctx.fillText(this.text, this.x, this.y);
+        ctx.restore();
     }
-  });
+}
 
-  // Log control
-  $('btnExportLog').addEventListener('click',()=>{
-    const text=log.map(x=>`[${x.t}] ${x.op} [${x.status}]${x.info?' — '+x.info:''}`).join('\n')||'Пусто';
-    saveText(text,'log.txt');
-  });
-  $('btnClearLog').addEventListener('click',()=>{
-    log.length=0;renderLog();toast('ok','Очищено');
-  });
+// --- Система Частиц (Искры, Взрывы, Осколки) ---
+class Particle {
+    constructor(x, y, color, size, speed, type = 'spark') {
+        this.x = x; this.y = y; this.color = color;
+        this.size = size; this.type = type;
+        this.life = 1.0; this.maxLife = RAND(0.5, 1.2);
+        
+        const angle = RAND(0, Math.PI * 2);
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.friction = type === 'explosion' ? 0.92 : 0.98;
+        this.rotation = RAND(0, Math.PI*2);
+        this.rotSpeed = RAND(-5, 5);
+    }
+    update(dt) {
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.vx *= Math.pow(this.friction, dt*60);
+        this.vy *= Math.pow(this.friction, dt*60);
+        this.rotation += this.rotSpeed * dt;
+        this.life -= dt;
+    }
+    draw(ctx) {
+        const ratio = Math.max(0, this.life / this.maxLife);
+        ctx.globalAlpha = ratio;
+        ctx.fillStyle = Cheats.matrix ? '#0f0' : this.color;
+        
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
 
-  addLog('INIT','OK',tg?'Telegram':'Browser');
-  renderLog();
-})();
+        if (this.type === 'spark') {
+            // Линейная искра (растягивается по скорости)
+            const speed = Math.hypot(this.vx, this.vy) * 0.05;
+            ctx.fillRect(-this.size * speed, -this.size/2, this.size * speed * 2, this.size);
+        } else if (this.type === 'debris') {
+            // Треугольный осколок
+            ctx.beginPath();
+            ctx.moveTo(0, -this.size); ctx.lineTo(this.size, this.size); ctx.lineTo(-this.size, this.size);
+            ctx.fill();
+        } else {
+            // Круг (Explosion / Trail)
+            ctx.beginPath(); ctx.arc(0, 0, this.size * ratio, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.restore();
+        ctx.globalAlpha = 1;
+    }
+}
+
+// Утилита для спавна VFX
+const VFX = {
+    spawnExplosion(x, y, color, scaleFactor = 1) {
+        AudioSys.sfxExplode();
+        // Вспышка (Shockwave - симулируется частицей)
+        Entities.particles.push(new Particle(x, y, color, 40 * SCALE * scaleFactor, 0, 'glow'));
+        // Осколки
+        for(let i=0; i<15*scaleFactor; i++) Entities.particles.push(new Particle(x, y, '#e2e8f0', RAND(3, 8)*SCALE, RAND(100, 400)*SCALE, 'debris'));
+        // Искры
+        for(let i=0; i<25*scaleFactor; i++) Entities.particles.push(new Particle(x, y, color, RAND(2, 5)*SCALE, RAND(50, 300)*SCALE, 'spark'));
+    },
+    spawnHit(x, y, color) {
+        AudioSys.sfxHit();
+        for(let i=0; i<5; i++) Entities.particles.push(new Particle(x, y, color, RAND(2,4)*SCALE, RAND(30,100)*SCALE, 'spark'));
+    }
+};
+
+// --- Дроп (Лут) ---
+class Drop {
+    constructor(x, y, type) {
+        this.x = x; this.y = y; this.type = type; // 'coin', 'heal', 'shield'
+        this.size = 14 * SCALE;
+        this.vy = 100 * SCALE; // Падает вниз
+        this.life = 10.0; // Исчезнет через 10 сек
+        this.pulse = 0;
+    }
+    update(dt) {
+        this.y += this.vy * dt;
+        this.life -= dt;
+        this.pulse += dt * 5;
+
+        // Магнит
+        if (Player.stats.magnet > 0) {
+            const dist = DIST(this.x, this.y, Player.x, Player.y);
+            if (dist < Player.stats.magnet * SCALE) {
+                const angle = Math.atan2(Player.y - this.y, Player.x - this.x);
+                // Ускорение к игроку
+                this.x += Math.cos(angle) * 500 * SCALE * dt;
+                this.y += Math.sin(angle) * 500 * SCALE * dt;
+            }
+        }
+    }
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        const scale = 1 + Math.sin(this.pulse) * 0.1;
+        ctx.scale(scale, scale);
+
+        if (this.type === 'coin') {
+            ctx.fillStyle = '#fbbf24'; ctx.shadowColor = '#fbbf24'; ctx.shadowBlur = 10;
+            ctx.beginPath(); ctx.moveTo(0, -this.size); ctx.lineTo(this.size, 0); ctx.lineTo(0, this.size); ctx.lineTo(-this.size, 0); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.shadowBlur = 0; ctx.font = `bold ${12*SCALE}px sans-serif`; ctx.textAlign='center'; ctx.fillText('💎', 0, 4*SCALE);
+        } else if (this.type === 'heal') {
+            ctx.fillStyle = '#10b981'; ctx.shadowColor = '#10b981'; ctx.shadowBlur = 15;
+            ctx.fillRect(-this.size*0.8, -this.size*0.8, this.size*1.6, this.size*1.6);
+            ctx.fillStyle = '#fff'; ctx.shadowBlur = 0;
+            ctx.fillRect(-this.size*0.2, -this.size*0.6, this.size*0.4, this.size*1.2); ctx.fillRect(-this.size*0.6, -this.size*0.2, this.size*1.2, this.size*0.4);
+        } else if (this.type === 'shield') {
+            ctx.fillStyle = '#38bdf8'; ctx.shadowColor = '#38bdf8'; ctx.shadowBlur = 15;
+            ctx.beginPath(); ctx.arc(0,0,this.size,0,Math.PI*2); ctx.fill();
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 2*SCALE; ctx.stroke();
+        }
+        ctx.restore();
+
+        // Мигание перед исчезновением
+        if (this.life < 3 && Math.floor(this.life * 10) % 2 === 0) {
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill();
+        }
+    }
+    collect() {
+        this.life = 0; // Destroy
+        AudioSys.sfxPowerup();
+        if (this.type === 'coin') {
+            Player.addCoins(RAND_INT(1, 3) * (Cheats.megascore ? 10 : 1));
+            AudioSys.sfxCoin();
+        }
+        if (this.type === 'heal') {
+            Player.heal(Player.stats.maxHp * 0.2);
+            UI.toast("РЕМОНТ +20%", "success");
+        }
+        if (this.type === 'shield') {
+            Player.addShield(50);
+            UI.toast("ЩИТ ВОССТАНОВЛЕН", "info");
+        }
+    }
+}
+
+// --- Пули ---
+class Bullet {
+    constructor(x, y, vx, vy, isEnemy, damage, props = {}) {
+        this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+        this.isEnemy = isEnemy; this.damage = damage;
+        this.size = (props.size || 4) * SCALE;
+        this.color = props.color || (isEnemy ? '#f43f5e' : '#38bdf8');
+        this.pierce = props.pierce || false;
+        this.explosive = props.explosive || false;
+        this.life = props.life || 5.0;
+        this.target = null; // Для aimbot
+    }
+    update(dt) {
+        // Aimbot Logic
+        if (!this.isEnemy && Cheats.aimbot && Entities.enemies.length > 0) {
+            if (!this.target || this.target.hp <= 0) {
+                let minDist = Infinity;
+                Entities.enemies.forEach(e => {
+                    let d = DIST(this.x, this.y, e.x, e.y);
+                    if (d < minDist) { minDist = d; this.target = e; }
+                });
+            }
+            if (this.target) {
+                const angle = Math.atan2(this.target.y - this.y, this.target.x - this.x);
+                const currentSpeed = Math.hypot(this.vx, this.vy);
+                // Плавный поворот вектора
+                this.vx = LERP(this.vx, Math.cos(angle) * currentSpeed, dt * 10);
+                this.vy = LERP(this.vy, Math.sin(angle) * currentSpeed, dt * 10);
+            }
+        }
+
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.life -= dt;
+
+        // Удаление за границами
+        if (this.y < -100 || this.y > H + 100 || this.x < -100 || this.x > W + 100) this.life = 0;
+
+        // Trail effect
+        if (Math.random() > 0.6) {
+            Entities.particles.push(new Particle(this.x, this.y, this.color, this.size*0.6, 0, 'glow'));
+        }
+    }
+    draw(ctx) {
+        ctx.fillStyle = Cheats.matrix ? '#0f0' : this.color;
+        ctx.beginPath();
+        // Рисуем капсулу/овал по направлению движения
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(Math.atan2(this.vy, this.vx));
+        ctx.ellipse(0, 0, this.size * 2, this.size, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+    }
+}
+
+// --- Враги (AI & Логика) ---
+const EnemyTypes = {
+    DRONE:   { hp: 20, spd: 150, size: 18, color: '#f43f5e', score: 10,  xp: 5,  type: 'kamikaze' },
+    FIGHTER: { hp: 40, spd: 80,  size: 24, color: '#fbbf24', score: 25,  xp: 15, type: 'shooter', fireRate: 2.0 },
+    TANK:    { hp: 150,spd: 40,  size: 35, color: '#a855f7', score: 60,  xp: 40, type: 'tank', dropRate: 0.5 },
+    STEALTH: { hp: 30, spd: 120, size: 20, color: '#10b981', score: 40,  xp: 25, type: 'stealth' }
+};
+
+class Enemy {
+    constructor(x, y, templateData, waveMultiplier) {
+        this.x = x; this.y = y;
+        this.template = templateData;
+        this.maxHp = this.template.hp * waveMultiplier;
+        if(Cheats.weakenemy) this.maxHp = 1;
+        this.hp = this.maxHp;
+        this.size = this.template.size * SCALE;
+        this.color = this.template.color;
+        
+        this.vx = 0;
+        this.vy = this.template.spd * SCALE;
+        
+        this.timer = 0;
+        this.life = 1; // 0 = delete
+        
+        this.alpha = 1;
+    }
+
+    update(dt) {
+        if (Cheats.freeze) return;
+        let actualDt = dt * (Cheats.slowmo ? 0.25 : 1);
+        this.timer += actualDt;
+
+        // AI Поведение
+        switch(this.template.type) {
+            case 'kamikaze':
+                // Легкое покачивание (Sine wave)
+                this.x += Math.sin(this.y * 0.02) * 50 * SCALE * actualDt;
+                break;
+            case 'shooter':
+                // Остановка на 1/3 экрана, стрельба, потом вниз
+                if (this.y > H * 0.2 && this.y < H * 0.4) {
+                    this.vy = 20 * SCALE;
+                    if (this.timer > this.template.fireRate) {
+                        this.timer = 0;
+                        this.shootAtPlayer();
+                    }
+                } else { this.vy = this.template.spd * SCALE; }
+                break;
+            case 'tank':
+                this.vy = this.template.spd * SCALE; // Тупо танкет прет вниз
+                break;
+            case 'stealth':
+                // Мерцание (Инвиз)
+                this.alpha = 0.2 + Math.abs(Math.sin(this.timer * 3)) * 0.8;
+                this.x += Math.cos(this.timer) * 100 * SCALE * actualDt;
+                break;
+        }
+
+        this.y += this.vy * actualDt;
+        this.x += this.vx * actualDt;
+
+        if (this.y > H + 100) this.life = 0;
+    }
+
+    shootAtPlayer() {
+        const angle = Math.atan2(Player.y - this.y, Player.x - this.x);
+        const spd = 300 * SCALE;
+        AudioSys.sfxShoot(); // Вражеский звук (тихий)
+        Entities.enemyBullets.push(new Bullet(this.x, this.y, Math.cos(angle)*spd, Math.sin(angle)*spd, true, 15, {color: '#f59e0b', size: 5}));
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.globalAlpha = this.alpha;
+
+        // Рисуем геометрию в зависимости от типа
+        ctx.fillStyle = this.color;
+        ctx.shadowBlur = 15; ctx.shadowColor = this.color;
+
+        ctx.beginPath();
+        if (this.template.type === 'tank') {
+            ctx.rect(-this.size, -this.size, this.size*2, this.size*2);
+            ctx.fill();
+            // Внутренний квадрат
+            ctx.fillStyle = '#0f172a'; ctx.fillRect(-this.size*0.6, -this.size*0.6, this.size*1.2, this.size*1.2);
+        } else if (this.template.type === 'shooter') {
+            ctx.moveTo(0, this.size); ctx.lineTo(-this.size, -this.size); ctx.lineTo(0, -this.size*0.5); ctx.lineTo(this.size, -this.size);
+            ctx.fill();
+        } else {
+            // Классический треугольник (Drone, Stealth)
+            ctx.moveTo(0, this.size); ctx.lineTo(-this.size, -this.size); ctx.lineTo(this.size, -this.size);
+            ctx.fill();
+        }
+        
+        ctx.shadowBlur = 0;
+
+        // Полоска здоровья
+        if (this.hp < this.maxHp) {
+            ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(-this.size, -this.size - 10*SCALE, this.size*2, 4*SCALE);
+            ctx.fillStyle = this.color; ctx.fillRect(-this.size, -this.size - 10*SCALE, (this.size*2)*(this.hp/this.maxHp), 4*SCALE);
+        }
+
+        ctx.restore();
+    }
+
+    takeDamage(amount, isCrit = false) {
+        if (this.hp <= 0) return;
+        
+        let dmg = amount;
+        if (Cheats.oneshot) dmg = this.maxHp;
+        
+        this.hp -= dmg;
+        VFX.spawnHit(this.x, this.y, this.color);
+        
+        // Всплывающий урон
+        Entities.texts.push(new FloatingText(this.x, this.y - this.size, Math.floor(dmg), isCrit ? '#f59e0b' : '#fff', isCrit ? 22 : 14, isCrit));
+
+        if (this.hp <= 0) this.die();
+    }
+
+    die() {
+        this.life = 0;
+        VFX.spawnExplosion(this.x, this.y, this.color, this.size / (20*SCALE));
+        
+        // Логика смерти
+        let pts = this.template.score * (Cheats.megascore ? 100 : 1);
+        State.score += pts + (State.combo * 5);
+        State.combo++;
+        State.comboTimer = 2.5; // Секунд на комбо
+        
+        Player.addXp(this.template.xp * (Cheats.megascore ? 5 : 1));
+        if (Cheats.lifesteal) Player.heal(2);
+
+        // Дропы
+        let dropChance = this.template.dropRate || 0.1;
+        if (Math.random() < dropChance) {
+            let roll = Math.random();
+            if(roll < 0.6) Entities.drops.push(new Drop(this.x, this.y, 'coin'));
+            else if(roll < 0.8) Entities.drops.push(new Drop(this.x, this.y, 'heal'));
+            else Entities.drops.push(new Drop(this.x, this.y, 'shield'));
+        }
+
+        WaveSys.registerKill();
+        Engine.shake(2);
+        UI.updateHUD();
+    }
+}
+
+// --- Босс ---
+class Boss extends Enemy {
+    constructor(x, y, wave) {
+        super(x, y, { hp: 1000, spd: 30, size: 60, color: '#f59e0b', type: 'boss', score: 1000, xp: 500 }, Math.pow(1.5, Math.floor(wave/5)));
+        this.phase = 1;
+        UI.showBossHUD(this.maxHp);
+    }
+    update(dt) {
+        if (Cheats.freeze) return;
+        let actualDt = dt * (Cheats.slowmo ? 0.25 : 1);
+        this.timer += actualDt;
+
+        // Выход на арену
+        if (this.y < H * 0.2) {
+            this.y += this.vy * actualDt;
+        } else {
+            // Паттерн движения (восьмерка)
+            this.x = W/2 + Math.sin(this.timer * 0.5) * (W * 0.3);
+            this.y = H*0.2 + Math.sin(this.timer) * (H * 0.05);
+
+            // Смена фазы
+            if (this.hp < this.maxHp * 0.5 && this.phase === 1) {
+                this.phase = 2;
+                VFX.spawnExplosion(this.x, this.y, '#fff', 3);
+                UI.toast("ВНИМАНИЕ: ФАЗА 2", "danger");
+            }
+
+            // Атаки
+            if (this.phase === 1) {
+                // Кольцо пуль каждые 2 сек
+                if (this.timer % 2.0 < actualDt) {
+                    AudioSys.playTone(200, 'sawtooth', 0.2, 0.4, 50);
+                    for(let i=0; i<12; i++) {
+                        let a = (Math.PI*2/12) * i + this.timer;
+                        Entities.enemyBullets.push(new Bullet(this.x, this.y, Math.cos(a)*200*SCALE, Math.sin(a)*200*SCALE, true, 20, {size: 6, color: '#f59e0b'}));
+                    }
+                }
+            } else {
+                // Лазер-спрей
+                if (this.timer % 0.1 < actualDt) {
+                    let a = Math.atan2(Player.y - this.y, Player.x - this.x) + RAND(-0.2, 0.2);
+                    Entities.enemyBullets.push(new Bullet(this.x, this.y, Math.cos(a)*400*SCALE, Math.sin(a)*400*SCALE, true, 30, {size: 8, color: '#ef4444'}));
+                }
+            }
+        }
+        UI.updateBossHUD(this.hp);
+    }
+    draw(ctx) {
+        ctx.save(); ctx.translate(this.x, this.y);
+        // Массивный восьмиугольник
+        ctx.fillStyle = this.color; ctx.shadowBlur = 30; ctx.shadowColor = this.color;
+        ctx.beginPath();
+        for(let i=0; i<8; i++) {
+            ctx.lineTo(Math.cos(i*Math.PI/4)*this.size, Math.sin(i*Math.PI/4)*this.size);
+        }
+        ctx.closePath(); ctx.fill();
+        
+        // Ядро (пульсирующее)
+        let coreScale = 0.5 + Math.abs(Math.sin(this.timer*5))*0.2;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(0,0, this.size*coreScale, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+    }
+    die() {
+        super.die();
+        UI.hideBossHUD();
+        // Лутпиньята
+        for(let i=0; i<20; i++) Entities.drops.push(new Drop(this.x + RAND(-50,50), this.y + RAND(-50,50), 'coin'));
+        Entities.drops.push(new Drop(this.x, this.y, 'heal'));
+        Entities.drops.push(new Drop(this.x, this.y+20, 'shield'));
+        UI.toast("АНОМАЛИЯ УНИЧТОЖЕНА", "epic");
+        Engine.shake(20);
+    }
+}
+
+
+/**
+ * ============================================================================
+ * ИГРОК
+ * ============================================================================
+ */
+const Player = {
+    x: 0, y: 0, targetX: 0, targetY: 0,
+    width: 44 * SCALE, height: 44 * SCALE,
+    
+    // Экономика и прогрессия
+    coins: 0,
+    
+    // Статы (Улучшаемые в магазине)
+    stats: {
+        hp: 100, maxHp: 100,
+        shield: 0, maxShield: 50,
+        level: 1, xp: 0, xpNeeded: 100,
+        dmgMult: 1.0,
+        fireRate: 0.2, // Секунд между выстрелами
+        speed: 10,     // Лерп (отзывчивость)
+        guns: 1,       // Кол-во дул
+        magnet: 80,    // Радиус магнита
+        critChance: 0.1,
+        critMult: 2.0
+    },
+
+    timer: 0,
+    shootTimer: 0,
+    tilt: 0,
+
+    init() {
+        this.x = W / 2; this.y = H * 0.8;
+        this.targetX = this.x; this.targetY = this.y;
+        
+        // Сброс статов при начале (магазин сохраняет покупки через внешний объект, здесь базовые + покупки)
+        this.stats = { ...this.stats, hp: this.stats.maxHp, shield: 0, xp: 0, level: 1, xpNeeded: 100 };
+    },
+
+    update(dt) {
+        this.timer += dt;
+
+        // Физика плавного следования (Lerp)
+        const dx = this.targetX - this.x;
+        const dy = this.targetY - this.y;
+        this.x += dx * this.stats.speed * dt;
+        this.y += dy * this.stats.speed * dt;
+        
+        // Ограничения экрана
+        this.x = CLAMP(this.x, this.width/2, W - this.width/2);
+        this.y = CLAMP(this.y, this.height/2, H - this.height/2);
+
+        this.tilt = CLAMP(dx * 0.1, -30, 30); // Крен в градусах
+
+        // Авто-Стрельба
+        this.shootTimer -= dt;
+        if (this.shootTimer <= 0) {
+            this.shoot();
+        }
+
+        // Лазер чит
+        if (Cheats.laser) this.fireLaser(dt);
+    },
+
+    shoot() {
+        let fr = Cheats.rapidfire ? 0.05 : this.stats.fireRate;
+        this.shootTimer = fr;
+
+        let guns = Cheats.multishotMax ? 10 : this.stats.guns;
+        let baseDmg = 15 * this.stats.dmgMult;
+        let isCrit = Math.random() < this.stats.critChance;
+        let finalDmg = isCrit ? baseDmg * this.stats.critMult : baseDmg;
+
+        AudioSys.sfxShoot();
+
+        const spreadAngle = 0.15; 
+        const startAngle = -Math.PI/2 - (spreadAngle * (guns-1)/2);
+
+        for (let i=0; i<guns; i++) {
+            let angle = guns === 1 ? -Math.PI/2 : startAngle + (spreadAngle * i);
+            let spd = 800 * SCALE;
+            let vx = Math.cos(angle) * spd;
+            let vy = Math.sin(angle) * spd;
+            
+            // Свойства пули из магазина/читов
+            let props = {
+                color: isCrit ? '#f59e0b' : '#38bdf8',
+                size: isCrit ? 6 : 4,
+                pierce: Cheats.pierce || SkillTree.unlocked.pierce,
+                explosive: Cheats.explosive || SkillTree.unlocked.explosive
+            };
+
+            // Если aimbot включен, пуля найдет цель в `update`
+            Entities.playerBullets.push(new Bullet(this.x, this.y - this.height/2, vx, vy, false, finalDmg, props));
+        }
+    },
+
+    fireLaser(dt) {
+        ctxMain.save();
+        ctxMain.beginPath(); ctxMain.moveTo(this.x, this.y - this.height/2);
+        
+        let hitEnemy = null; let laserEnd = 0;
+        for(let e of Entities.enemies) {
+            if (Math.abs(e.x - this.x) < e.size + 20*SCALE && e.y < this.y) {
+                if (!hitEnemy || e.y > hitEnemy.y) hitEnemy = e;
+            }
+        }
+
+        if (hitEnemy) {
+            laserEnd = hitEnemy.y;
+            hitEnemy.takeDamage(100 * dt); // Массивный урон в секунду
+            VFX.spawnHit(hitEnemy.x, hitEnemy.y, '#38bdf8');
+        }
+
+        ctxMain.lineTo(this.x, laserEnd);
+        ctxMain.strokeStyle = '#38bdf8'; ctxMain.lineWidth = 20 * SCALE; ctxMain.shadowBlur = 20; ctxMain.shadowColor = '#38bdf8';
+        ctxMain.stroke(); ctxMain.strokeStyle = '#fff'; ctxMain.lineWidth = 8 * SCALE; ctxMain.stroke();
+        ctxMain.restore();
+        AudioSys.sfxLaser();
+    },
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.tilt * Math.PI / 180);
+
+        const s = this.width / 2;
+
+        // Огонь двигателя
+        const thrust = 1 + Math.sin(this.timer * 30) * 0.3;
+        ctx.fillStyle = '#38bdf8'; ctx.shadowBlur = 20; ctx.shadowColor = '#38bdf8';
+        ctx.beginPath(); ctx.ellipse(0, s, s*0.4, s*0.8 * thrust, 0, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Hi-Tech Корпус
+        const grad = ctx.createLinearGradient(0, -s, 0, s);
+        grad.addColorStop(0, '#f8fafc'); grad.addColorStop(1, '#94a3b8');
+        ctx.fillStyle = grad;
+        
+        ctx.beginPath();
+        ctx.moveTo(0, -s*1.2); // Острый нос
+        ctx.lineTo(s*0.8, s*0.4); // Правое крыло
+        ctx.lineTo(s*0.3, s*0.8);
+        ctx.lineTo(0, s*0.5); // Зад
+        ctx.lineTo(-s*0.3, s*0.8);
+        ctx.lineTo(-s*0.8, s*0.4); // Левое крыло
+        ctx.closePath(); ctx.fill();
+
+        // Кабина
+        ctx.fillStyle = '#0ea5e9';
+        ctx.beginPath(); ctx.ellipse(0, -s*0.2, s*0.25, s*0.5, 0, 0, Math.PI*2); ctx.fill();
+        
+        // Отрисовка щита
+        if (this.stats.shield > 0 || Cheats.godmode) {
+            ctx.strokeStyle = `rgba(56, 189, 248, ${0.4 + Math.sin(this.timer*5)*0.2})`;
+            ctx.lineWidth = 4 * SCALE;
+            ctx.beginPath(); ctx.arc(0, 0, s * 1.5, 0, Math.PI*2); ctx.stroke();
+            ctx.fillStyle = `rgba(56, 189, 248, 0.1)`; ctx.fill();
+        }
+
+        ctx.restore();
+    },
+
+    takeDamage(amount) {
+        if (Cheats.godmode) return;
+        
+        // Сначала бьем по щиту
+        if (this.stats.shield > 0) {
+            if (this.stats.shield >= amount) {
+                this.stats.shield -= amount;
+                amount = 0;
+            } else {
+                amount -= this.stats.shield;
+                this.stats.shield = 0;
+            }
+            AudioSys.sfxHit();
+        }
+
+        // Остаток бьет по ХП
+        if (amount > 0) {
+            this.stats.hp -= amount;
+            Engine.shake(10);
+            VFX.spawnExplosion(this.x, this.y, '#f43f5e', 2);
+            UI.toast("КРИТИЧЕСКИЙ УРОН", "danger");
+        }
+
+        UI.updateHUD();
+        if (this.stats.hp <= 0) Engine.gameOver();
+    },
+
+    heal(amt) { this.stats.hp = Math.min(this.stats.maxHp, this.stats.hp + amt); UI.updateHUD(); },
+    addShield(amt) { this.stats.shield = Math.min(this.stats.maxShield, this.stats.shield + amt); UI.updateHUD(); },
+    addCoins(amt) { this.coins += amt; UI.updateHUD(); },
+    addXp(amt) {
+        this.stats.xp += amt;
+        while (this.stats.xp >= this.stats.xpNeeded) {
+            this.stats.level++;
+            this.stats.xp -= this.stats.xpNeeded;
+            this.stats.xpNeeded = Math.floor(this.stats.xpNeeded * 1.4);
+            this.addCoins(50); // Награда за уровень
+            Entities.texts.push(new FloatingText(this.x, this.y - 60*SCALE, "LEVEL UP", '#a855f7', 24, true));
+            UI.toast(`УРОВЕНЬ ${this.stats.level} ДОСТИГНУТ`, "epic");
+            VFX.spawnExplosion(this.x, this.y, '#a855f7', 3);
+        }
+        UI.updateHUD();
+    }
+};
+
+/**
+ * ============================================================================
+ * МЕНЕДЖЕР ВОЛН (СПАВНЕР)
+ * ============================================================================
+ */
+const WaveSys = {
+    wave: 1,
+    killsInWave: 0,
+    killsNeeded: 10,
+    spawnTimer: 0,
+    
+    init() { this.wave = 1; this.killsInWave = 0; this.killsNeeded = 10; },
+
+    update(dt) {
+        if (Entities.enemies.length > (Cheats.fastspawn ? 80 : 30)) return;
+
+        this.spawnTimer -= dt;
+        let delay = Cheats.fastspawn ? 0.1 : Math.max(0.5, 2.0 - (this.wave * 0.1));
+
+        if (this.spawnTimer <= 0) {
+            this.spawnTimer = delay;
+            this.spawnStandard();
+        }
+    },
+
+    spawnStandard() {
+        const x = RAND(30*SCALE, W - 30*SCALE);
+        let r = Math.random();
+        let tpl = EnemyTypes.DRONE;
+
+        // Усложнение пула по мере волн
+        if (this.wave > 2 && r < 0.3) tpl = EnemyTypes.FIGHTER;
+        if (this.wave > 4 && r < 0.1) tpl = EnemyTypes.TANK;
+        if (this.wave > 6 && r < 0.15) tpl = EnemyTypes.STEALTH;
+
+        Entities.enemies.push(new Enemy(x, -50*SCALE, tpl, 1 + (this.wave*0.2)));
+    },
+
+    forceBoss() {
+        Entities.enemies.push(new Boss(W/2, -100*SCALE, this.wave));
+        UI.toast("ПРЕДУПРЕЖДЕНИЕ: ОРБИТАЛЬНЫЙ СТРАЖ", "danger");
+    },
+
+    registerKill() {
+        this.killsInWave++;
+        if (this.killsInWave >= this.killsNeeded) {
+            this.wave++;
+            this.killsInWave = 0;
+            this.killsNeeded = Math.floor(this.killsNeeded * 1.4);
+            
+            if (this.wave % CONFIG.BOSS_SPAWN_WAVE === 0) {
+                this.forceBoss();
+            } else {
+                UI.toast(`СЕКТОР ${this.wave} ЗАЧИЩЕН`, "success");
+                Player.addShield(20); // Бонус за волну
+            }
+            UI.updateHUD();
+        }
+    }
+};
+
+
+/**
+ * ============================================================================
+ * ДЕРЕВО НАВЫКОВ (МАГАЗИН)
+ * ============================================================================
+ */
+const SkillTree = {
+    unlocked: { pierce: false, explosive: false },
+    items: [
+        // Вооружение
+        { id: 'dmg', tab: 'shop-weapons', name: 'Урон+', desc: 'Увеличивает базовый урон', cost: 100, max: 10, current: 0, act: () => Player.stats.dmgMult += 0.2 },
+        { id: 'rate', tab: 'shop-weapons', name: 'Скорострел', desc: 'Снижает задержку между выстрелами', cost: 150, max: 8, current: 0, act: () => Player.stats.fireRate = Math.max(0.05, Player.stats.fireRate - 0.02) },
+        { id: 'guns', tab: 'shop-weapons', name: 'Доп. Ствол', desc: 'Увеличивает веер пуль', cost: 500, max: 4, current: 0, act: () => Player.stats.guns++ },
+        { id: 'crit', tab: 'shop-weapons', name: 'Крит. Шанс', desc: '+5% шанс нанести x2 урон', cost: 200, max: 10, current: 0, act: () => Player.stats.critChance += 0.05 },
+        // Защита
+        { id: 'hp', tab: 'shop-defense', name: 'Броня+', desc: 'Увеличивает Макс ХП на 50', cost: 100, max: 10, current: 0, act: () => { Player.stats.maxHp += 50; Player.heal(50); } },
+        { id: 'shield', tab: 'shop-defense', name: 'Энерго-Щит', desc: 'Поглощает урон. Реген между волнами.', cost: 300, max: 5, current: 0, act: () => { Player.stats.maxShield += 50; Player.addShield(50); } },
+        { id: 'heal', tab: 'shop-defense', name: 'Ремкомплект', desc: 'Восстанавливает 100% ХП', cost: 50, max: 999, current: 0, act: () => Player.heal(Player.stats.maxHp) },
+        // Технологии
+        { id: 'mag', tab: 'shop-tech', name: 'Магнит+', desc: 'Радиус сбора лута', cost: 100, max: 5, current: 0, act: () => Player.stats.magnet += 50 },
+        { id: 'pierce', tab: 'shop-tech', name: 'Пробитие', desc: 'Пули пролетают насквозь', cost: 1000, max: 1, current: 0, act: () => SkillTree.unlocked.pierce = true },
+        { id: 'expl', tab: 'shop-tech', name: 'Разрывные', desc: 'Взрыв при попадании пули', cost: 1500, max: 1, current: 0, act: () => SkillTree.unlocked.explosive = true }
+    ],
+
+    buy(id) {
+        let item = this.items.find(i => i.id === id);
+        if (!item || item.current >= item.max || Player.coins < item.cost) return;
+
+        Player.coins -= item.cost;
+        item.current++;
+        item.act();
+        
+        // Увеличение цены
+        if(item.max > 1 && item.id !== 'heal') item.cost = Math.floor(item.cost * 1.5);
+        
+        UI.renderShop();
+        UI.updateHUD();
+        AudioSys.sfxUI();
+    }
+};
+
+/**
+ * ============================================================================
+ * УПРАВЛЕНИЕ ИНТЕРФЕЙСОМ (UI) И СОБЫТИЯМИ
+ * ============================================================================
+ */
+const UI = {
+    els: {},
+    
+    init() {
+        this.els = {
+            hpBar: document.getElementById('ui-hp-bar'), hpTxt: document.getElementById('ui-hp-text'),
+            shBar: document.getElementById('ui-shield-bar'), shTxt: document.getElementById('ui-shield-text'),
+            xpBar: document.getElementById('ui-xp-bar'), lvlTxt: document.getElementById('ui-lvl'),
+            waveTxt: document.getElementById('ui-wave'), scoreTxt: document.getElementById('ui-score'),
+            comboTxt: document.getElementById('ui-combo'), toastWrap: document.getElementById('toast-container'),
+            bossHud: document.getElementById('boss-hud'), bossBar: document.getElementById('boss-hp-bar'),
+            shopCoins: document.getElementById('shop-coins-display')
+        };
+
+        // Кнопки открытия модалок
+        document.getElementById('btn-shop').onclick = () => { this.renderShop(); this.openModal('modal-shop'); };
+        document.getElementById('btn-cheats').onclick = () => this.openModal('modal-cheats');
+
+        // Система Вкладок (Tabs)
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                AudioSys.sfxUI();
+                let parent = e.target.closest('.modal-window');
+                parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                parent.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+                e.target.classList.add('active');
+                document.getElementById(e.target.dataset.target).classList.add('active');
+            };
+        });
+
+        // Система Тогглов (Читы)
+        document.querySelectorAll('.ios-toggle').forEach(toggle => {
+            toggle.onclick = function() {
+                AudioSys.sfxUI();
+                this.classList.toggle('on');
+                Cheats[this.dataset.cheat] = this.classList.contains('on');
+            };
+        });
+    },
+
+    updateHUD() {
+        this.els.hpBar.style.width = `${Math.max(0, (Player.stats.hp / Player.stats.maxHp) * 100)}%`;
+        this.els.hpTxt.innerText = `${Math.floor(Player.stats.hp)}`;
+        
+        let shieldPct = Player.stats.maxShield > 0 ? (Player.stats.shield / Player.stats.maxShield) * 100 : 0;
+        this.els.shBar.style.width = `${Math.max(0, shieldPct)}%`;
+        this.els.shTxt.innerText = `${Math.floor(Player.stats.shield)}`;
+
+        this.els.xpBar.style.width = `${(Player.stats.xp / Player.stats.xpNeeded) * 100}%`;
+        this.els.lvlTxt.innerText = Player.stats.level;
+        this.els.waveTxt.innerText = `Сектор ${WaveSys.wave}`;
+        this.els.scoreTxt.innerText = State.score;
+        this.els.shopCoins.innerText = Player.coins;
+
+        if (State.combo > 1) {
+            this.els.comboTxt.style.display = 'block';
+            this.els.comboTxt.innerText = `Комбо x${State.combo}`;
+        } else {
+            this.els.comboTxt.style.display = 'none';
+        }
+    },
+
+    showBossHUD(max) {
+        this.els.bossHud.classList.add('active');
+        this.currentBossMaxHp = max;
+    },
+    updateBossHUD(hp) {
+        this.els.bossBar.style.width = `${Math.max(0, (hp / this.currentBossMaxHp) * 100)}%`;
+    },
+    hideBossHUD() {
+        this.els.bossHud.classList.remove('active');
+    },
+
+    toast(msg, type = 'primary') {
+        let el = document.createElement('div');
+        el.className = `liquid-glass toast`;
+        if(type==='danger') el.style.borderLeft = '4px solid var(--color-danger)';
+        if(type==='success') el.style.borderLeft = '4px solid var(--color-success)';
+        if(type==='epic') el.style.borderLeft = '4px solid var(--color-epic)';
+        if(type==='info') el.style.borderLeft = '4px solid var(--accent-main)';
+        el.innerText = msg;
+        this.els.toastWrap.appendChild(el);
+        setTimeout(() => el.remove(), 3000);
+    },
+
+    openModal(id) {
+        AudioSys.sfxUI();
+        State.isPaused = true;
+        document.getElementById(id).classList.add('active');
+    },
+
+    closeModal(id) {
+        AudioSys.sfxUI();
+        document.getElementById(id).classList.remove('active');
+        State.isPaused = false;
+    },
+
+    renderShop() {
+        this.els.shopCoins.innerText = Player.coins;
+        // Очистка контейнеров
+        document.getElementById('shop-weapons').innerHTML = '';
+        document.getElementById('shop-defense').innerHTML = '';
+        document.getElementById('shop-tech').innerHTML = '';
+
+        SkillTree.items.forEach(item => {
+            let container = document.getElementById(item.tab);
+            let isMax = item.current >= item.max;
+            let canAfford = Player.coins >= item.cost;
+            let btnClass = canAfford && !isMax ? 'primary' : '';
+            let btnText = isMax ? 'МАКС' : `${item.cost} 💎`;
+
+            container.innerHTML += `
+                <div class="list-card">
+                    <div class="list-info">
+                        <h4>${item.name} ${item.max > 1 ? `<span class="level-badge">${item.current}/${item.max}</span>` : ''}</h4>
+                        <p>${item.desc}</p>
+                    </div>
+                    <button class="glass-btn ${btnClass}" style="width: 80px;" ${(!canAfford || isMax) ? 'disabled' : ''} onclick="SkillTree.buy('${item.id}')">
+                        ${btnText}
+                    </button>
+                </div>
+            `;
+        });
+    }
+};
+
+/**
+ * ============================================================================
+ * ЯДРО (ENGINE) - ГЛАВНЫЙ ЦИКЛ, РЕНДЕР И КОЛЛИЗИИ
+ * ============================================================================
+ */
+const Engine = {
+    init() {
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        
+        // Input Setup
+        const setTarget = (clientX, clientY) => {
+            if(State.isPaused || !State.isRunning) return;
+            // Учитываем сдвиг пальца чтобы не загораживать корабль
+            Player.targetX = clientX;
+            Player.targetY = clientY - (Player.height * 2.0); 
+        };
+
+        // Мышь
+        document.addEventListener('mousemove', e => setTarget(e.clientX, e.clientY));
+        
+        // Тач с превентом для канваса
+        document.getElementById('game-container').addEventListener('touchmove', e => {
+            e.preventDefault(); // Запрет скролла ТОЛЬКО НА КАНВАСЕ (чтобы меню работали)
+            setTarget(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: false });
+
+        // Инит подсистем
+        UI.init();
+        requestAnimationFrame(t => this.loop(t));
+    },
+
+    resize() {
+        W = window.innerWidth;
+        H = window.innerHeight;
+        SCALE = Math.min(W, H) / CONFIG.BASE_WIDTH;
+        
+        // Установка реальных размеров холстов
+        [canvasBg, canvasMain, canvasFx].forEach(c => {
+            c.width = W; c.height = H;
+        });
+        
+        this.generateBg();
+    },
+
+    generateBg() {
+        Entities.bgStars = []; Entities.nebulae = [];
+        for(let i=0; i<200; i++) Entities.bgStars.push({ x: RAND(0,W), y: RAND(0,H), r: RAND(0.5, 2.5), spd: RAND(10, 100), a: RAND(0.2, 0.9) });
+        for(let i=0; i<6; i++) Entities.nebulae.push({ x: RAND(0,W), y: RAND(0,H), r: RAND(200, 500)*SCALE, c: i%2===0?'rgba(56,189,248,0.03)':'rgba(168,85,247,0.03)' });
+    },
+
+    startRun() {
+        AudioSys.init(); AudioSys.resume(); // Разлок аудио контекста
+        Entities.clearAll();
+        Player.init();
+        WaveSys.init();
+        State.score = 0; State.combo = 0;
+        State.isRunning = true; State.isPaused = false;
+        
+        document.getElementById('screen-start').classList.add('state-hidden');
+        document.getElementById('screen-gameover').classList.add('state-hidden');
+        UI.updateHUD();
+    },
+
+    gameOver() {
+        State.isRunning = false;
+        document.getElementById('go-score').innerText = State.score;
+        document.getElementById('go-wave').innerText = WaveSys.wave;
+        document.getElementById('go-lvl').innerText = Player.stats.level;
+        document.getElementById('go-coins').innerText = Player.coins;
+        document.getElementById('screen-gameover').classList.remove('state-hidden');
+        VFX.spawnExplosion(Player.x, Player.y, '#38bdf8', 5); // Мега взрыв
+    },
+
+    nukeScreen() {
+        Entities.enemies.forEach(e => e.takeDamage(99999));
+        this.shake(30);
+        UI.toast("ЭКСТЕРМИНАТУС АКТИВИРОВАН", "epic");
+    },
+
+    shake(amt) { State.cameraShake = Math.max(State.cameraShake, amt); },
+
+    update(dt) {
+        if (State.isPaused) return;
+
+        Player.update(dt);
+        WaveSys.update(dt);
+
+        // Комбо таймер
+        if (State.comboTimer > 0 && !Cheats.infcombo) {
+            State.comboTimer -= dt;
+            if (State.comboTimer <= 0) { State.combo = 0; UI.updateHUD(); }
+        }
+
+        // --- Обработка Коллизий (Spatial Hash Grid слишком сложен для этого объема, используем Brute Force с O(N^2), но N малое) ---
+
+        // Пули Игрока -> Враги
+        Entities.playerBullets.forEach(b => {
+            if (b.life <= 0) return;
+            for(let e of Entities.enemies) {
+                if (e.life <= 0) continue;
+                if (DIST(b.x, b.y, e.x, e.y) < e.size + b.size) {
+                    e.takeDamage(b.damage, b.size > 4*SCALE); // Считаем крупную пулю критом (визуально)
+                    
+                    if (Cheats.chain || SkillTree.unlocked.chain) {
+                        let chains = 0;
+                        Entities.enemies.forEach(other => {
+                            if (chains < 3 && other !== e && DIST(e.x, e.y, other.x, other.y) < 250*SCALE) {
+                                other.takeDamage(b.damage * 0.5);
+                                // Рендер молнии (Хак: рисуем прямо тут в fx слое)
+                                ctxFx.beginPath(); ctxFx.moveTo(e.x, e.y); ctxFx.lineTo(other.x, other.y);
+                                ctxFx.strokeStyle = '#a855f7'; ctxFx.lineWidth = 3*SCALE; ctxFx.stroke();
+                                chains++;
+                            }
+                        });
+                    }
+
+                    if (b.explosive) VFX.spawnExplosion(b.x, b.y, '#f59e0b', 1.5);
+                    if (!b.pierce) b.life = 0; // Уничтожить пулю
+                    break; // Одна пуля = одно попадание (если не Pierce)
+                }
+            }
+        });
+
+        // Враги -> Игрок (Таран)
+        Entities.enemies.forEach(e => {
+            if (e.life <= 0) return;
+            if (DIST(e.x, e.y, Player.x, Player.y) < e.size + Player.width/2 * 0.8) {
+                Player.takeDamage(20);
+                e.takeDamage(100); // Таран наносит урон обоим
+            }
+        });
+
+        // Вражеские пули -> Игрок
+        Entities.enemyBullets.forEach(b => {
+            if (b.life <= 0) return;
+            if (DIST(b.x, b.y, Player.x, Player.y) < b.size + Player.width/2 * 0.6) { // Хитбокс игрока чуть меньше визуала
+                Player.takeDamage(b.damage);
+                b.life = 0;
+            }
+        });
+
+        // Дроп -> Игрок
+        Entities.drops.forEach(d => {
+            if (d.life <= 0) return;
+            if (DIST(d.x, d.y, Player.x, Player.y) < d.size + Player.width/2) {
+                d.collect();
+            }
+        });
+
+        // --- Обновление и Очистка (Garbage Collection) ---
+        const updateArray = (arr) => arr.filter(item => { item.update(dt); return item.life > 0; });
+        
+        Entities.playerBullets = updateArray(Entities.playerBullets);
+        Entities.enemyBullets = updateArray(Entities.enemyBullets);
+        Entities.enemies = updateArray(Entities.enemies);
+        Entities.drops = updateArray(Entities.drops);
+        Entities.texts = updateArray(Entities.texts);
+        Entities.particles = updateArray(Entities.particles);
+
+        // Тряска
+        if (State.cameraShake > 0) State.cameraShake *= 0.9;
+        if (State.cameraShake < 0.5) State.cameraShake = 0;
+    },
+
+    draw() {
+        // --- 1. Фон (Bg Canvas) ---
+        // Очистка с эффектом шлейфа, если не ретро
+        if(Cheats.retro) {
+            ctxBg.fillStyle = '#000'; ctxBg.fillRect(0,0,W,H);
+        } else {
+            ctxBg.fillStyle = Cheats.matrix ? 'rgba(0,10,0,0.4)' : 'rgba(2,6,23,0.4)';
+            ctxBg.fillRect(0, 0, W, H);
+        }
+
+        if (Cheats.rainbow) {
+            Cheats._rainbowHue = (Cheats._rainbowHue + 1) % 360;
+            ctxBg.fillStyle = `hsla(${Cheats._rainbowHue}, 70%, 10%, 0.5)`;
+            ctxBg.fillRect(0, 0, W, H);
+        }
+
+        // Звезды и туманности
+        ctxBg.globalCompositeOperation = 'screen';
+        Entities.nebulae.forEach(n => {
+            const g = ctxBg.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r);
+            g.addColorStop(0, n.c); g.addColorStop(1, 'transparent');
+            ctxBg.fillStyle = g; ctxBg.beginPath(); ctxBg.arc(n.x, n.y, n.r, 0, Math.PI*2); ctxBg.fill();
+        });
+        
+        ctxBg.globalCompositeOperation = 'source-over';
+        ctxBg.fillStyle = Cheats.matrix ? '#0f0' : '#fff';
+        Entities.bgStars.forEach(s => {
+            s.y += s.spd * SCALE * State.dt;
+            if (s.y > H) { s.y = 0; s.x = RAND(0,W); }
+            ctxBg.globalAlpha = s.a;
+            ctxBg.fillRect(s.x, s.y, s.r*SCALE, s.r*SCALE);
+        });
+        ctxBg.globalAlpha = 1;
+
+
+        // --- 2. Основной Слой (Main Canvas) ---
+        ctxMain.clearRect(0, 0, W, H);
+        
+        ctxMain.save();
+        if (State.cameraShake > 0) {
+            ctxMain.translate(RAND(-State.cameraShake, State.cameraShake), RAND(-State.cameraShake, State.cameraShake));
+        }
+
+        if (Cheats.retro) {
+            ctxMain.imageSmoothingEnabled = false;
+        }
+
+        Entities.drops.forEach(d => d.draw(ctxMain));
+        Entities.enemyBullets.forEach(b => b.draw(ctxMain));
+        Entities.playerBullets.forEach(b => b.draw(ctxMain));
+        Entities.enemies.forEach(e => e.draw(ctxMain));
+        
+        if (State.isRunning) Player.draw(ctxMain);
+
+        ctxMain.restore();
+
+        // --- 3. Слой Эффектов (Fx Canvas) - Частицы и Текст ---
+        ctxFx.clearRect(0, 0, W, H);
+        ctxFx.save();
+        if (State.cameraShake > 0) {
+            ctxFx.translate(RAND(-State.cameraShake, State.cameraShake), RAND(-State.cameraShake, State.cameraShake));
+        }
+
+        Entities.particles.forEach(p => p.draw(ctxFx));
+        Entities.texts.forEach(t => t.draw(ctxFx));
+
+        ctxFx.restore();
+    },
+
+    loop(time) {
+        // Вычисление Delta Time
+        let dt = (time - State.lastTime) / 1000;
+        State.lastTime = time;
+        if (dt > 0.1) dt = 0.1; // Ограничение лагов (макс 100мс шаг)
+        State.dt = dt;
+
+        if (State.isRunning) {
+            this.update(dt);
+        }
+        this.draw();
+        requestAnimationFrame(t => this.loop(t));
+    }
+};
+
+// --- Запуск ---
+window.onload = () => Engine.init();
+
 </script>
 </body>
 </html>
